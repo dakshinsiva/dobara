@@ -102,7 +102,11 @@ export default async function OverviewPage() {
     const convs = callRows.filter((r) => isConversation(r.call));
     conversations = convs.length;
     costCents = convs.reduce((s, r) => s + (r.call.totalCostCents ?? 0), 0);
-    latest = convs.find((r) => r.call.transcript) ?? null;
+    // Prefer the most recent conversation with some substance; a declined call makes a poor showcase.
+    latest =
+      convs.find((r) => r.call.transcript && r.call.conversationDuration >= 60) ??
+      convs.find((r) => r.call.transcript) ??
+      null;
     liveIds = recent.filter((c) => isLive(c)).map((c) => c.id);
   } catch (e) {
     return <SetupNotice error={e instanceof Error ? e.message : String(e)} />;
