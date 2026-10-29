@@ -81,7 +81,8 @@ function groupStats(rows: Contact[], group: Group): GroupStats {
 export function computeLift(rows: Contact[]): Lift {
   const called = groupStats(rows, "called");
   const control = groupStats(rows, "control");
-  const points = called.rate != null && control.rate != null ? (called.rate - control.rate) * 100 : null;
+  const anyReorders = called.reordered + control.reordered > 0;
+  const points = anyReorders && called.rate != null && control.rate != null ? (called.rate - control.rate) * 100 : null;
   const relative =
     called.rate != null && control.rate != null && control.rate > 0 ? called.rate / control.rate - 1 : null;
   return { called, control, points, relative };

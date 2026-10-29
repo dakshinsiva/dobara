@@ -230,9 +230,15 @@ export async function applyExecution(payload: ExecutionPayload): Promise<Call | 
       const [c] = await db.select().from(contacts).where(eq(contacts.phone, phone)).limit(1);
       contactId = c?.id ?? null;
     }
+    const createdAt = payload.created_at ? new Date(payload.created_at) : undefined;
     [call] = await db
       .insert(calls)
-      .values({ executionId: payload.id, contactId, ...values })
+      .values({
+        executionId: payload.id,
+        contactId,
+        ...values,
+        ...(createdAt && !Number.isNaN(createdAt.getTime()) ? { createdAt } : {}),
+      })
       .returning();
   }
 
