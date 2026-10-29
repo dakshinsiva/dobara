@@ -19,7 +19,7 @@ import {
   Th,
   Tr,
 } from "@/components/ui";
-import { COHORTS } from "@/db/schema";
+import { CALLABLE_COHORTS } from "@/db/schema";
 import { optionalEnv } from "@/lib/env";
 import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
 import { eligibleForCampaign, getOverview, type Overview } from "@/lib/insights";
@@ -149,9 +149,13 @@ export default async function OverviewPage() {
         </Card>
 
         <div className="space-y-6 lg:col-span-2">
-          <Card title="Cohorts" description="Who gets called, and when." padded={false}>
+          <Card
+            title="Cohorts"
+            description={`Who gets called, and when.${t.byCohort.active.called + t.byCohort.active.control ? ` ${t.byCohort.active.called + t.byCohort.active.control} active customers are not due yet.` : ""}`}
+            padded={false}
+          >
             <ul className="divide-y divide-line">
-              {COHORTS.map((c) => {
+              {CALLABLE_COHORTS.map((c) => {
                 const eligible = eligibleForCampaign(data.contacts, data.calls, c);
                 return (
                   <li key={c} className="flex items-center justify-between gap-3 px-5 py-3">

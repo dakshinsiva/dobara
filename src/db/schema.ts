@@ -3,8 +3,18 @@ import { date, integer, jsonb, pgTable, real, text, timestamp, uuid } from "driz
 export const LANGUAGES = ["en", "hi", "kn", "ta"] as const;
 export type Language = (typeof LANGUAGES)[number];
 
-export const COHORTS = ["new", "running_low", "lapsed"] as const;
+/**
+ * new = first order delivered 4 to 7 days ago · running_low = due to run out · lapsed = 60+ days
+ * active = bought recently, not due yet (never called by campaigns)
+ */
+export const COHORTS = ["new", "running_low", "lapsed", "active"] as const;
 export type Cohort = (typeof COHORTS)[number];
+
+/** Cohorts a campaign may dial. */
+export const CALLABLE_COHORTS: readonly Cohort[] = ["new", "running_low", "lapsed"];
+
+export const SOURCES = ["csv", "shopify"] as const;
+export type Source = (typeof SOURCES)[number];
 
 export const GROUPS = ["called", "control"] as const;
 export type Group = (typeof GROUPS)[number];
@@ -39,6 +49,14 @@ export const contacts = pgTable("contacts", {
   product: text("product"),
   flavour: text("flavour"),
   lastOrderAt: date("last_order_at"),
+  firstOrderAt: date("first_order_at"),
+  /** When the latest order was delivered, if the store reports it */
+  deliveredAt: date("delivered_at"),
+  orderCount: integer("order_count").notNull().default(0),
+  /** Where the row came from: csv import or a store sync */
+  source: text("source").$type<Source>().notNull().default("csv"),
+  /** The store's customer id, for store syncs */
+  externalId: text("external_id"),
   /** Set when the brand records a repeat order (import or manual). Drives the lift metric. */
   reorderedAt: date("reordered_at"),
   reorderSource: text("reorder_source"),
@@ -82,6 +100,43 @@ export const actions = pgTable("actions", {
   resolvedAt: timestamp("resolved_at", { withTimezone: true }),
 });
 
+export type IntegrationSettings = {
+  /** Share of customers that get called; the rest form the control group */
+  calledShare: number;
+  /** How many days one order typically lasts; drives the running-low cohort */
+  daysPerOrder: number;
+  /** Language for customers whose state gives no hint */
+  defaultLanguage: Language;
+  /** How far back to read orders on each sync */
+  lookbackDays: number;
+};
+
+export type SyncSummary = {
+  at: string;
+  orders: number;
+  customers: number;
+  inserted: number;
+  updated: number;
+  reorders: number;
+  skipped: number;
+  byCohort: Record<string, number>;
+  error?: string;
+};
+
+export const integrations = pgTable("integrations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  provider: text("provider").notNull().unique(),
+  /** Store host, e.g. cosmix.myshopify.com, or a full URL for the built-in sample store */
+  shop: text("shop").notNull(),
+  shopName: text("shop_name"),
+  tokenEncrypted: text("token_encrypted").notNull(),
+  settings: jsonb("settings").$type<IntegrationSettings>().notNull(),
+  lastSyncAt: timestamp("last_sync_at", { withTimezone: true }),
+  lastSyncSummary: jsonb("last_sync_summary").$type<SyncSummary>(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export type ExtractionResult = {
   subjective: string | null;
   objective: string | null;
@@ -100,3 +155,4 @@ export type Call = typeof calls.$inferSelect;
 export type NewCall = typeof calls.$inferInsert;
 export type Action = typeof actions.$inferSelect;
 export type NewAction = typeof actions.$inferInsert;
+export type Integration = typeof integrations.$inferSelect;

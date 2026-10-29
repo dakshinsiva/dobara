@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { COHORTS } from "@/db/schema";
+import { CALLABLE_COHORTS, COHORTS } from "@/db/schema";
+import { jsonError } from "@/lib/http";
 import { startCampaign } from "@/lib/calls";
 import { errorResponse, parseJson } from "@/lib/http";
 
@@ -17,6 +18,9 @@ const Body = z
 export async function POST(req: Request) {
   const parsed = await parseJson(req, Body);
   if (!parsed.ok) return parsed.res;
+  if (parsed.data.cohort && !CALLABLE_COHORTS.includes(parsed.data.cohort)) {
+    return jsonError("That cohort is never called", 400);
+  }
   try {
     const result = await startCampaign(parsed.data);
     return NextResponse.json({ ok: true, ...result });

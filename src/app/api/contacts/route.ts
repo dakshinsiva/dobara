@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { COHORTS, LANGUAGES, type Cohort, type Group, type Language } from "@/db/schema";
 import { toE164 } from "@/lib/env";
+import { assignGroup } from "@/lib/split";
 
 export const runtime = "nodejs";
 
@@ -27,16 +28,6 @@ const Body = z.object({
   calledShare: z.number().min(0).max(1).default(0.7),
 });
 
-/** Stable hash so the same phone always lands in the same group across re-imports. */
-function hashToUnit(s: string): number {
-  let h = 2166136261;
-  for (let i = 0; i < s.length; i++) {
-    h ^= s.charCodeAt(i);
-    h = Math.imul(h, 16777619);
-  }
-  return ((h >>> 0) % 10000) / 10000;
-}
-
 export async function GET() {
   const db = getDb();
   const rows = await db.select().from(contacts).orderBy(desc(contacts.createdAt)).limit(500);
@@ -58,7 +49,7 @@ export async function POST(req: Request) {
       skipped.push(r.phone);
       continue;
     }
-    const group: Group = r.group ?? (hashToUnit(phone) < calledShare ? "called" : "control");
+    const group: Group = r.group ?? assignGroup(phone, calledShare);
     values.push({
       name: r.name.trim(),
       phone,

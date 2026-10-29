@@ -5,7 +5,7 @@
 import { desc, eq } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { Action, Call, Cohort, Contact, Group } from "@/db/schema";
-import { COHORTS } from "@/db/schema";
+import { CALLABLE_COHORTS, COHORTS } from "@/db/schema";
 import { TERMINAL_STATUSES } from "./bolna";
 import { humanize } from "./labels";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
@@ -244,6 +244,11 @@ export function eligibleForCampaign(contactRows: Contact[], callRows: CallWithCo
       .map((r) => r.call.contactId)
   );
   return contactRows.filter(
-    (c) => c.group === "called" && !c.doNotCall && (!cohort || c.cohort === cohort) && !recent.has(c.id)
+    (c) =>
+      c.group === "called" &&
+      !c.doNotCall &&
+      CALLABLE_COHORTS.includes(c.cohort) &&
+      (!cohort || c.cohort === cohort) &&
+      !recent.has(c.id)
   );
 }

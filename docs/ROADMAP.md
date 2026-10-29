@@ -11,6 +11,7 @@ What is shipped, what would create the most value next, and why. Ordered by (mar
 - Called vs control split and reorder-lift measurement
 - Cohort campaigns with calling-hour guardrails and retries
 - Browser calls (WebRTC) to the same agent for demos and QA
+- Shopify connection: paste a read-only token, cohorts build themselves from orders and deliveries, reorders detected automatically, daily sync on Vercel Cron, built-in sample store
 
 ## Next, in order
 

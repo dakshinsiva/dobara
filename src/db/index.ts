@@ -27,8 +27,18 @@ function createDb(): Db {
     const dir = url.slice("pglite://".length) || ".data/dobara";
     mkdirSync(path.dirname(path.resolve(dir)), { recursive: true });
     // One PGlite instance per process; survives Next.js dev reloads.
-    const g = globalThis as unknown as { __pglite?: PGlite };
+    const g = globalThis as unknown as { __pglite?: PGlite; __pgliteShutdown?: boolean };
     g.__pglite ??= new PGlite(dir);
+    if (!g.__pgliteShutdown) {
+      // Checkpoint on shutdown: a killed process leaves the WAL without a valid checkpoint
+      // and PGlite then refuses to open the directory.
+      g.__pgliteShutdown = true;
+      const close = () => {
+        g.__pglite?.close().finally(() => process.exit(0));
+      };
+      process.once("SIGTERM", close);
+      process.once("SIGINT", close);
+    }
     return drizzlePglite(g.__pglite, { schema }) as unknown as Db;
   }
   if (/neon\.tech/.test(url)) {

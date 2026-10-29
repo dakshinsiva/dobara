@@ -15,7 +15,9 @@ Built for the Bolna Buildathon at Symphony 2026, with Cosmix as the first design
 | Never sold to, never given medical advice, always told it is an AI                                        | **Voice of the customer**: usage, stock, satisfaction, issues and verbatim change requests, aggregated |
 | One tap to opt out, honoured forever                                                                      | **Reorder lift**: the called group measured against an uncalled control group from the same import     |
 
-Three cohorts drive the calls: **new** (delivered 4 to 7 days ago), **running low** (about to run out) and **lapsed** (no order in 60 days). Each has its own conversation flow in a single prompt.
+Three cohorts drive the calls: **new** (delivered 4 to 7 days ago), **running low** (about to run out) and **lapsed** (no order in 60 days). Each has its own conversation flow in a single prompt. Customers who bought recently sit in **active** and are never called.
+
+**Connect a Shopify store in two minutes.** Paste a read-only Admin API token on the Connect store page and Dobara reads orders and deliveries, assigns every customer to a cohort, guesses their language from the shipping state, splits them into called and control groups, and detects reorders for the lift metric. A sync runs on demand and every morning at 09:00 IST on Vercel Cron. A built-in sample store (24 customers of a plant-protein brand) lets anyone try the flow without credentials.
 
 There is also a **Talk to Dobara** page: the same agent over the browser microphone (WebRTC), so a judge or a brand lead can hear it without a phone.
 
@@ -44,7 +46,11 @@ pnpm agent:sync                   # creates the agent + extraction fields on Bol
 pnpm dev                          # http://localhost:3000
 ```
 
-Then open **Import data**, paste a CSV starting with your own number, go to **Customers** and press **Call now**. Or open **Talk to Dobara** and speak to it in the browser.
+Then open **Connect store** and press **Try the sample store** (or paste a real Shopify token), sync, and watch **Customers** fill with cohorts. Add your own number through **Import data** and press **Call now**, or open **Talk to Dobara** and speak to it in the browser.
+
+### Shopify
+
+In the Shopify admin: Settings → Apps and sales channels → Develop apps → Create an app → Admin API scopes `read_orders` and `read_customers` → Install → copy the Admin API access token. Paste it on `/connect`. The token is encrypted at rest with `INTEGRATION_SECRET` (falls back to `WEBHOOK_SECRET`). Cohort rules live in [`src/lib/shopify/cohorts.ts`](src/lib/shopify/cohorts.ts); the sync in [`src/lib/shopify/sync.ts`](src/lib/shopify/sync.ts). Set `CRON_SECRET` on Vercel to enable the daily sync in [`vercel.json`](vercel.json).
 
 ### Webhooks
 
@@ -54,7 +60,7 @@ Bolna's webhook source IPs are 13.203.39.153, 13.126.9.249 and 13.202.133.53 if 
 
 ### Database options
 
-- **Local, zero setup (default):** `DATABASE_URL=pglite://.data/dobara` runs an embedded Postgres on disk. Only one process can open it at a time, so stop `pnpm dev` before `pnpm db:migrate` or `pnpm db:reset`.
+- **Local, zero setup (default):** `DATABASE_URL=pglite://.data/dobara` runs an embedded Postgres on disk. Only one process can open it at a time, so stop `pnpm dev` before `pnpm db:migrate` or `pnpm db:reset`. Stop it with Ctrl-C (the app checkpoints on SIGINT/SIGTERM); a hard kill can leave the directory unopenable, in which case delete `.data/dobara` and migrate again.
 - **Any Postgres:** `DATABASE_URL=postgres://user:pass@host:5432/dobara`.
 - **Neon (production):** `vercel link`, then `vercel integration add neon`, then `vercel env pull .env.local --yes`. The Neon HTTP driver is picked automatically when the URL contains `neon.tech`.
 
@@ -73,7 +79,7 @@ Bolna's webhook source IPs are 13.203.39.153, 13.126.9.249 and 13.202.133.53 if 
 
 ## Experiment design
 
-Imports split phone numbers into **called** and **control** by a stable hash (default 70/30). Control customers can never be dialled from the app. When the brand records reorders (Import data → Record reorders), both groups are matched by phone and the Insights page reports the difference in reorder rate as lift. Re-imports never move a customer between groups.
+Imports and store syncs split phone numbers into **called** and **control** by a stable hash (default 70/30). Control customers can never be dialled from the app. Reorders are detected automatically on each store sync (a newer order than the one on file) or recorded by hand (Import data → Record reorders); both groups are matched the same way and the Insights page reports the difference in reorder rate as lift. Re-imports never move a customer between groups.
 
 ## Scripts
 
@@ -98,6 +104,7 @@ src/app/          console pages and API routes (App Router)
 src/components/   UI primitives (components/ui) and feature components
 src/db/           Drizzle schema and driver selection (PGlite, Neon, pg)
 src/lib/          Bolna client, call lifecycle, insights, labels, formatting
+src/lib/shopify/  Admin GraphQL client, cohort rules, sync, sample store
 docs/             buildathon research, positioning, team, roadmap
 ```
 

@@ -9,6 +9,7 @@ import {
   Mic,
   PhoneCall,
   Settings2,
+  Store,
   Upload,
   Users,
   type LucideIcon,
@@ -28,6 +29,7 @@ export function Sidebar({ brand, openActions }: { brand: string; openActions: nu
     { href: "/talk", label: "Talk to Dobara", icon: Mic, accent: true },
   ];
   const secondary: Item[] = [
+    { href: "/connect", label: "Connect store", icon: Store },
     { href: "/import", label: "Import data", icon: Upload },
     { href: "/agent", label: "Agent", icon: Settings2 },
   ];

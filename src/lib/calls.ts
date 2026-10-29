@@ -2,9 +2,17 @@
  * Call lifecycle: start phone or browser calls, ingest Bolna execution payloads,
  * and turn extractions into customer memory and follow-up actions.
  */
-import { and, desc, eq, gt, notExists, notInArray } from "drizzle-orm";
+import { and, desc, eq, gt, inArray, notExists, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
-import type { ActionType, Call, Cohort, Contact, ExtractedData, NewAction } from "@/db/schema";
+import {
+  CALLABLE_COHORTS,
+  type ActionType,
+  type Call,
+  type Cohort,
+  type Contact,
+  type ExtractedData,
+  type NewAction,
+} from "@/db/schema";
 import { bolna, BolnaError, TERMINAL_STATUSES, type ExecutionPayload, type WebCallSession } from "./bolna";
 import { optionalEnv, requireEnv } from "./env";
 import { daysSince } from "./format";
@@ -132,7 +140,7 @@ export async function startCampaign(opts: { cohort?: Cohort; limit?: number } = 
       and(
         eq(contacts.group, "called"),
         eq(contacts.doNotCall, 0),
-        opts.cohort ? eq(contacts.cohort, opts.cohort) : undefined,
+        opts.cohort ? eq(contacts.cohort, opts.cohort) : inArray(contacts.cohort, [...CALLABLE_COHORTS]),
         notExists(recentCall)
       )
     )

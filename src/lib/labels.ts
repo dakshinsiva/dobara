@@ -11,12 +11,14 @@ export const COHORT_LABEL: Record<Cohort, string> = {
   new: "New customer",
   running_low: "Running low",
   lapsed: "Lapsed",
+  active: "Active",
 };
 
 export const COHORT_HINT: Record<Cohort, string> = {
   new: "First order delivered 4 to 7 days ago",
   running_low: "Likely to run out this week",
   lapsed: "No order for 60 days or more",
+  active: "Bought recently, not due yet. Never called.",
 };
 
 export const GROUP_LABEL: Record<Group, string> = { called: "Called", control: "Control" };
