@@ -207,7 +207,8 @@ export async function applyExecution(payload: ExecutionPayload): Promise<Call | 
 
   const values = {
     status: String(payload.status ?? "queued"),
-    conversationDuration: payload.conversation_duration ?? 0,
+    // Browser calls report fractional seconds (143.9); the column is an integer.
+    conversationDuration: Math.round(payload.conversation_duration ?? 0),
     transcript: payload.transcript ?? null,
     summary: payload.summary ?? null,
     extracted,
