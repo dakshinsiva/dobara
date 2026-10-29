@@ -93,7 +93,7 @@ async function rerankWithJev(
   queryText: string,
   candidates: Candidate[], // deduplicated, authorized rows in a stable order
   limit = 10,
-  batchSize = 80,
+  batchSize = 80
 ): Promise<Candidate[]> {
   if (!Number.isInteger(limit) || limit < 1) {
     throw new Error("limit must be a positive integer");
@@ -128,7 +128,7 @@ async function rerankWithJev(
             },
             criteria,
           },
-        ]),
+        ])
       ),
       maxRetries: 0, // propagate errors to the caller without retrying
       abortSignal,
