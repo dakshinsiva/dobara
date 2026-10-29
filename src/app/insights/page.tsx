@@ -3,7 +3,7 @@ import { ChartColumn } from "lucide-react";
 import { SetupNotice } from "@/components/SetupNotice";
 import { Badge, Bar, Card, EmptyState, LinkButton, PageHeader, Stat } from "@/components/ui";
 import { fmtDate, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
-import { getInsights, type Bucket, type Insights } from "@/lib/insights";
+import { describeSignificance, getInsights, type Bucket, type Insights } from "@/lib/insights";
 import { humanize } from "@/lib/labels";
 
 export const dynamic = "force-dynamic";
@@ -105,9 +105,17 @@ export default async function InsightsPage() {
                   </div>
                 ))}
               </div>
+              <p className="mt-4 text-sm leading-6">{describeSignificance(lift)}</p>
+              {lift.incrementalReorders != null && (
+                <p className="mt-1 text-sm text-muted">
+                  {lift.incrementalReorders} incremental reorder{lift.incrementalReorders === 1 ? "" : "s"} beyond what
+                  the control rate predicts.
+                </p>
+              )}
               <p className="mt-4 text-xs leading-5 text-faint">
-                Record reorders from the order export on the Import page. Phones are assigned to groups by a stable
-                hash, so re-imports never move a customer between groups.
+                Two-proportion test on reorder rates, two-sided, 95%. Reorders arrive from the store sync or the Import
+                page. Phones are assigned to groups by a stable hash, so re-imports never move a customer between
+                groups.
               </p>
             </Card>
 

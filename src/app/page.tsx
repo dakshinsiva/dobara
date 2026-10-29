@@ -4,6 +4,7 @@ import { ActionItem } from "@/components/ActionItem";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { CampaignButton } from "@/components/CampaignButton";
 import { ExtractionPill } from "@/components/ExtractionPill";
+import { Funnel } from "@/components/Funnel";
 import { SetupNotice } from "@/components/SetupNotice";
 import {
   Badge,
@@ -22,7 +23,7 @@ import {
 import { CALLABLE_COHORTS } from "@/db/schema";
 import { optionalEnv } from "@/lib/env";
 import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
-import { eligibleForCampaign, getOverview, type Overview } from "@/lib/insights";
+import { describeSignificance, eligibleForCampaign, getOverview, type Overview } from "@/lib/insights";
 import { COHORT_HINT, COHORT_LABEL, isLive } from "@/lib/labels";
 import { reorderMessage, whatsappLink } from "@/lib/whatsapp";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
@@ -106,6 +107,14 @@ export default async function OverviewPage() {
           value={perConversation == null ? "—" : fmtInrFromCents(perConversation)}
           hint={perConversation == null ? "Telephony, speech and LLM" : `${fmtUsdCents(perConversation)} all-in`}
         />
+      </section>
+
+      <section aria-label="Funnel" className="space-y-2">
+        <div className="flex items-baseline justify-between gap-4">
+          <h2 className="text-sm font-semibold">From eligible to incremental</h2>
+          <p className="text-right text-xs text-muted">{describeSignificance(lift)}</p>
+        </div>
+        <Funnel stages={data.funnel} />
       </section>
 
       <div className="grid gap-6 lg:grid-cols-5">
