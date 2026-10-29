@@ -26,6 +26,7 @@ type Raw = {
 
 export default async function CallPage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params;
+  if (!/^[0-9a-f-]{36}$/i.test(id)) notFound();
   const db = getDb();
   const [row] = await db
     .select({ call: schema.calls, contact: schema.contacts })

@@ -4,6 +4,7 @@ import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { COHORTS, LANGUAGES, type Cohort, type Group, type Language } from "@/db/schema";
 import { toE164 } from "@/lib/env";
+import { parseJson } from "@/lib/http";
 import { assignGroup } from "@/lib/split";
 
 export const runtime = "nodejs";
@@ -11,8 +12,8 @@ export const runtime = "nodejs";
 const { contacts } = schema;
 
 const Row = z.object({
-  name: z.string().min(1),
-  phone: z.string().min(6),
+  name: z.string().trim().optional(),
+  phone: z.string().min(1),
   language: z.enum(LANGUAGES).optional(),
   cohort: z.enum(COHORTS).optional(),
   group: z.enum(["called", "control"]).optional(),
@@ -35,10 +36,8 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const parsed = Body.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+  const parsed = await parseJson(req, Body);
+  if (!parsed.ok) return parsed.res;
   const { rows, calledShare } = parsed.data;
 
   const values = [];
@@ -51,7 +50,7 @@ export async function POST(req: Request) {
     }
     const group: Group = r.group ?? assignGroup(phone, calledShare);
     values.push({
-      name: r.name.trim(),
+      name: r.name || "Customer",
       phone,
       language: (r.language ?? "en") as Language,
       cohort: (r.cohort ?? "running_low") as Cohort,
@@ -64,7 +63,7 @@ export async function POST(req: Request) {
   }
 
   if (values.length === 0) {
-    return NextResponse.json({ error: "no valid phone numbers", skipped }, { status: 400 });
+    return NextResponse.json({ error: "No valid phone numbers in the rows", skipped }, { status: 400 });
   }
 
   const db = getDb();

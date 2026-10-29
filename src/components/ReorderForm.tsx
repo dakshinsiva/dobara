@@ -28,7 +28,7 @@ export function ReorderForm() {
         body: JSON.stringify({ phones, date }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(typeof json.error === "string" ? json.error : JSON.stringify(json.error ?? json));
+      if (!res.ok) throw new Error(typeof json.error === "string" ? json.error : "Paste one phone number per line.");
       setResult({
         text: `${json.matched} customer${json.matched === 1 ? "" : "s"} marked as reordered on ${json.date}${
           json.unmatched?.length ? `. ${json.unmatched.length} number(s) not in the workspace.` : "."

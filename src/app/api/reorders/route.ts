@@ -9,7 +9,7 @@ export const runtime = "nodejs";
 
 const Body = z.object({
   /** Phone numbers of customers who placed a repeat order, any format. */
-  phones: z.array(z.string().min(6)).min(1).max(5000),
+  phones: z.array(z.string().min(1)).min(1).max(5000),
   /** YYYY-MM-DD; defaults to today. */
   date: z
     .string()

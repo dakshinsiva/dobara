@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { ArrowRight, Mic, PhoneOutgoing } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
+import { GettingStarted, type Step } from "@/components/GettingStarted";
 import { SetupNotice } from "@/components/SetupNotice";
 import { Badge, Bar, Card, EmptyState, LinkButton, PageHeader, Stat, Table, Td, Th, Tr } from "@/components/ui";
 import { activeCalls } from "@/lib/calls";
 import { optionalEnv } from "@/lib/env";
 import { fmtDuration, fmtInrFromCents, pct } from "@/lib/format";
 import { describeSignificance, getRetentionHealth, type RetentionHealth } from "@/lib/insights";
+import { getIntegration } from "@/lib/shopify/sync";
 import { COHORT_HINT, COHORT_LABEL, isLive } from "@/lib/labels";
 import type { Cohort } from "@/db/schema";
 
@@ -28,16 +30,54 @@ export default async function OverviewPage() {
   const agentReady = Boolean(process.env.BOLNA_AGENT_ID && process.env.BOLNA_API_KEY);
   let h: RetentionHealth;
   let liveIds: string[] = [];
+  let storeConnected = false;
   try {
-    const [health, live] = await Promise.all([getRetentionHealth(), activeCalls()]);
+    const [health, live, integration] = await Promise.all([
+      getRetentionHealth(),
+      activeCalls(),
+      getIntegration("shopify"),
+    ]);
     h = health;
     liveIds = live.filter((c) => isLive(c)).map((c) => c.id);
+    storeConnected = Boolean(integration);
   } catch (e) {
     return <SetupNotice error={e instanceof Error ? e.message : String(e)} />;
   }
 
   const lifecycleTotal = Object.values(h.lifecycle).reduce((a, b) => a + b, 0);
   const lift = h.lift;
+  const steps: Step[] = [
+    {
+      title: "Bring in customers",
+      detail: storeConnected ? "Store connected" : "Connect Shopify or load the sample store",
+      href: "/connect",
+      done: storeConnected || h.base > 0,
+    },
+    {
+      title: "Add a number you can answer",
+      detail: "So you can hear the agent yourself",
+      href: "/import",
+      done: h.onboarding.csvContacts > 0,
+    },
+    {
+      title: "Hear a conversation",
+      detail: "Call now on Customers, or talk in the browser",
+      href: h.onboarding.csvContacts > 0 ? "/contacts?cohort=running_low" : "/talk",
+      done: h.conversations > 0,
+    },
+    {
+      title: "Clear a follow-up",
+      detail: "Send the WhatsApp link the agent promised",
+      href: "/actions",
+      done: h.onboarding.doneActions > 0,
+    },
+    {
+      title: "Record a reorder",
+      detail: "From the store sync or the Import page; this fills the lift",
+      href: "/import",
+      done: h.onboarding.anyReordered,
+    },
+  ];
 
   return (
     <div className="space-y-8">
@@ -63,6 +103,8 @@ export default async function OverviewPage() {
       {!agentReady && (
         <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so calls cannot be started yet." />
       )}
+
+      <GettingStarted steps={steps} />
 
       {h.base === 0 ? (
         <Card padded={false}>

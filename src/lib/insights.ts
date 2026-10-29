@@ -80,11 +80,12 @@ export interface Lift {
   incrementalReorders: number | null;
 }
 
-/** Standard normal CDF (Abramowitz and Stegun 7.1.26). */
+/** Standard normal CDF via erf (Abramowitz and Stegun 7.1.26), Φ(z) = ½(1 + erf(z/√2)). */
 function normalCdf(z: number): number {
-  const t = 1 / (1 + 0.3275911 * Math.abs(z));
+  const x = Math.abs(z) / Math.SQRT2;
+  const t = 1 / (1 + 0.3275911 * x);
   const poly = t * (0.254829592 + t * (-0.284496736 + t * (1.421413741 + t * (-1.453152027 + t * 1.061405429))));
-  const erf = 1 - poly * Math.exp(-z * z);
+  const erf = 1 - poly * Math.exp(-x * x);
   return 0.5 * (1 + (z < 0 ? -erf : erf));
 }
 
@@ -423,6 +424,8 @@ export interface RetentionHealth {
   openActions: number;
   redFlags: number;
   latest: CallWithContact | null;
+  /** Signals for the getting-started checklist. */
+  onboarding: { csvContacts: number; storeContacts: number; doneActions: number; anyReordered: boolean };
 }
 
 function median(values: number[]): number | null {
@@ -520,5 +523,11 @@ export async function getRetentionHealth(): Promise<RetentionHealth> {
     openActions,
     redFlags,
     latest,
+    onboarding: {
+      csvContacts: contactRows.filter((c) => c.source === "csv").length,
+      storeContacts: contactRows.filter((c) => c.source === "shopify").length,
+      doneActions: allActions.filter((a) => a.action.status === "done").length,
+      anyReordered: contactRows.some((c) => Boolean(c.reorderedAt)),
+    },
   };
 }

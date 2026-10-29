@@ -2,7 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { Upload } from "lucide-react";
+import Link from "next/link";
+import { Upload, Users } from "lucide-react";
 import { buttonClass } from "@/components/ui";
 
 const SAMPLE = `name,phone,language,cohort,product,flavour,last_order_at
@@ -47,7 +48,10 @@ export function ImportForm() {
         body: JSON.stringify({ rows, calledShare: share / 100 }),
       });
       const json = await res.json();
-      if (!res.ok) throw new Error(typeof json.error === "string" ? json.error : JSON.stringify(json.error ?? json));
+      if (!res.ok)
+        throw new Error(
+          typeof json.error === "string" ? json.error : "The CSV could not be read. Check the header row and try again."
+        );
       setResult({
         text: `Imported ${json.imported} customers: ${json.called} will be called, ${json.control} held out as control${
           json.skipped?.length ? `. Skipped ${json.skipped.length} invalid number(s).` : "."
@@ -99,7 +103,17 @@ export function ImportForm() {
           {busy ? "Importing…" : "Import customers"}
         </button>
       </div>
-      {result && <p className={result.error ? "text-sm text-danger-fg" : "text-sm text-good-fg"}>{result.text}</p>}
+      {result && (
+        <p className={result.error ? "text-sm text-danger-fg" : "text-sm text-good-fg"}>
+          {result.text}
+          {!result.error && (
+            <Link href="/contacts" className={buttonClass("secondary", "sm", "ml-3 align-middle")}>
+              <Users className="size-3.5" aria-hidden />
+              View customers
+            </Link>
+          )}
+        </p>
+      )}
     </div>
   );
 }

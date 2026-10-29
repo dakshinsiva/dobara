@@ -1,4 +1,5 @@
 import { ImportForm } from "@/components/ImportForm";
+import { QuickContactForm } from "@/components/QuickContactForm";
 import { ReorderForm } from "@/components/ReorderForm";
 import { Card, PageHeader } from "@/components/ui";
 
@@ -15,6 +16,12 @@ export default function ImportPage() {
 
       <div className="grid gap-6 lg:grid-cols-5">
         <div className="space-y-6 lg:col-span-3">
+          <Card
+            title="Add a test customer"
+            description="The fastest way to hear the agent: a number you can answer, placed in the running-low cohort."
+          >
+            <QuickContactForm />
+          </Card>
           <Card
             title="Customers"
             description="CSV with name, phone, language (en, hi, kn, ta), cohort (new, running_low, lapsed), product, flavour, last_order_at (YYYY-MM-DD). Add a group column (called or control) to force assignment."
