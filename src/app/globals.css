@@ -1,26 +1,125 @@
 @import "tailwindcss";
 
+/*
+ * Design tokens. Light is the primary theme (brand teams work in daylight on
+ * laptops); dark values are chosen per token, not inverted.
+ */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  color-scheme: light;
+  --canvas: #f6f5f2;
+  --surface: #ffffff;
+  --surface-2: #f1efea;
+  --line: #e6e3dc;
+  --line-strong: #d2cec5;
+  --fg: #17201d;
+  --muted: #5f6a66;
+  --faint: #8a948f;
+  --accent: #0f766e;
+  --accent-hover: #0b5f59;
+  --accent-soft: #e1f2ef;
+  --accent-fg: #ffffff;
+  --good: #0ca30c;
+  --good-bg: #e3f4e3;
+  --good-fg: #146414;
+  --warning: #fab219;
+  --warning-bg: #fdf0d5;
+  --warning-fg: #7a4d00;
+  --danger: #d03b3b;
+  --danger-bg: #fbe4e4;
+  --danger-fg: #8f1f1f;
+  --info: #2a78d6;
+  --info-bg: #e3edfb;
+  --info-fg: #1c4f9c;
+  --shadow: 0 1px 2px rgb(23 32 29 / 0.04), 0 1px 1px rgb(23 32 29 / 0.03);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    color-scheme: dark;
+    --canvas: #121413;
+    --surface: #1a1d1c;
+    --surface-2: #222624;
+    --line: #2c312e;
+    --line-strong: #3a403c;
+    --fg: #eef0ee;
+    --muted: #a3aba6;
+    --faint: #7b837e;
+    --accent: #2bb3a3;
+    --accent-hover: #4cc8b9;
+    --accent-soft: #163b37;
+    --accent-fg: #06201d;
+    --good: #3fbf3f;
+    --good-bg: #163a16;
+    --good-fg: #9be49b;
+    --warning: #fab219;
+    --warning-bg: #3f2e08;
+    --warning-fg: #f5c454;
+    --danger: #e66767;
+    --danger-bg: #3f1515;
+    --danger-fg: #f3a0a0;
+    --info: #3987e5;
+    --info-bg: #152a4a;
+    --info-fg: #9cc0f4;
+    --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   }
 }
 
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-fg: var(--accent-fg);
+  --color-good: var(--good);
+  --color-good-bg: var(--good-bg);
+  --color-good-fg: var(--good-fg);
+  --color-warning: var(--warning);
+  --color-warning-bg: var(--warning-bg);
+  --color-warning-fg: var(--warning-fg);
+  --color-danger: var(--danger);
+  --color-danger-bg: var(--danger-bg);
+  --color-danger-fg: var(--danger-fg);
+  --color-info: var(--info);
+  --color-info-bg: var(--info-bg);
+  --color-info-fg: var(--info-fg);
+  --shadow-card: var(--shadow);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+html {
+  font-family: var(--font-sans);
+}
+
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--canvas);
+  color: var(--fg);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Tables of numbers align; headline figures stay proportional. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Agent audio ring on the browser-call page */
+@keyframes ring {
+  from {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+  to {
+    transform: scale(1.9);
+    opacity: 0;
+  }
+}
+.ring-pulse {
+  animation: ring 1.6s ease-out infinite;
 }

@@ -1,181 +1,255 @@
 import Link from "next/link";
-import { desc } from "drizzle-orm";
-import { getDb, schema } from "@/db";
-import { flattenExtracted } from "@/lib/bolna";
-import { recentCalls } from "@/lib/calls";
-import { CallButton } from "@/components/CallButton";
-import { RefreshButton } from "@/components/RefreshButton";
+import { ChevronRight, Inbox, Mic, Upload } from "lucide-react";
+import { ActionItem } from "@/components/ActionItem";
+import { AutoRefresh } from "@/components/AutoRefresh";
+import { CampaignButton } from "@/components/CampaignButton";
+import { ExtractionPill } from "@/components/ExtractionPill";
+import { SetupNotice } from "@/components/SetupNotice";
+import { Badge, Card, EmptyState, KeyValue, LinkButton, PageHeader, Stat, StatusBadge, Table, Td, Th, Tr } from "@/components/ui";
+import { COHORTS } from "@/db/schema";
+import { optionalEnv } from "@/lib/env";
+import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
+import { eligibleForCampaign, getOverview, type Overview } from "@/lib/insights";
+import { COHORT_HINT, COHORT_LABEL, statusInfo } from "@/lib/labels";
+import { reorderMessage, whatsappLink } from "@/lib/whatsapp";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
+import { LANGUAGES } from "../../bolna/agent.config.mjs";
 
 export const dynamic = "force-dynamic";
 
-function Setup({ error }: { error: string }) {
-  return (
-    <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-700 dark:bg-amber-950 dark:text-amber-100">
-      <p className="font-medium">Not configured yet</p>
-      <p className="mt-1">{error}</p>
-      <ol className="mt-3 list-decimal space-y-1 pl-5">
-        <li>Copy <code>.env.example</code> to <code>.env.local</code> and fill in <code>DATABASE_URL</code> and <code>BOLNA_API_KEY</code>.</li>
-        <li>Run <code>pnpm db:migrate</code>, then <code>pnpm agent:sync</code> and paste the printed <code>BOLNA_AGENT_ID</code>.</li>
-        <li>Restart <code>pnpm dev</code>.</li>
-      </ol>
-    </div>
-  );
-}
-
-export default async function Dashboard() {
-  let contactRows;
-  let callRows;
+export default async function OverviewPage() {
+  const brand = optionalEnv("BRAND_NAME", "Cosmix");
+  let data: Overview;
   try {
-    const db = getDb();
-    contactRows = await db.select().from(schema.contacts).orderBy(desc(schema.contacts.createdAt)).limit(200);
-    callRows = await recentCalls(50);
+    data = await getOverview();
   } catch (e) {
-    return <Setup error={e instanceof Error ? e.message : String(e)} />;
+    return <SetupNotice error={e instanceof Error ? e.message : String(e)} />;
   }
 
   const agentReady = Boolean(process.env.BOLNA_AGENT_ID && process.env.BOLNA_API_KEY);
-  const called = contactRows.filter((c) => c.group === "called").length;
-  const control = contactRows.length - called;
-  const completed = callRows.filter((r) => r.call.status === "completed" && r.call.conversationDuration > 0);
-  const reached = completed.filter((r) => {
-    const f = flattenExtracted(r.call.extracted);
-    return f[`${CATEGORY.name}/${D.reached}`]?.objective === "yes";
-  }).length;
-  const reorderYes = completed.filter((r) => {
-    const f = flattenExtracted(r.call.extracted);
-    return f[`${CATEGORY.name}/${D.reorderIntent}`]?.objective === "yes";
-  }).length;
+  const webhookReady = Boolean(process.env.PUBLIC_BASE_URL);
+  const t = data.totals;
+  const liveIds = data.calls.filter((r) => statusInfo(r.call.status).live).map((r) => r.call.id);
+  const reorderRate = t.conversations ? (t.reorderYes / t.conversations) * 100 : null;
+  const perConversation = t.conversations ? t.costCents / t.conversations : null;
+  const lift = data.lift;
 
   return (
-    <div className="space-y-8">
-      {!agentReady && (
-        <Setup error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so calls cannot be started yet." />
-      )}
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow={`${brand} · Retention`}
+        title="Overview"
+        description="Dobara calls customers at the moment they would otherwise lapse, remembers every conversation, and turns what it hears into follow-ups and reorders."
+        actions={
+          <>
+            <AutoRefresh callIds={liveIds} />
+            <LinkButton href="/import" variant="secondary">
+              <Upload className="size-4" aria-hidden />
+              Import
+            </LinkButton>
+            <LinkButton href="/talk" variant="primary">
+              <Mic className="size-4" aria-hidden />
+              Talk to Dobara
+            </LinkButton>
+          </>
+        }
+      />
 
-      <section className="grid grid-cols-2 gap-3 md:grid-cols-5">
-        <Stat label="Contacts" value={contactRows.length} />
-        <Stat label="Called group" value={called} />
-        <Stat label="Control group" value={control} />
-        <Stat label="Conversations" value={completed.length} hint={`${reached} reached the customer`} />
-        <Stat label="Reorder intent: yes" value={reorderYes} />
+      {!agentReady && <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so calls cannot be started yet." />}
+
+      <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6" aria-label="Key figures">
+        <Stat label="Customers enrolled" value={t.contacts} hint={`${t.called} called · ${t.control} control`} />
+        <Stat label="Conversations" value={t.conversations} hint={t.conversations ? `${pct(t.reached, t.conversations)} reached the customer` : "No completed calls yet"} />
+        <Stat
+          label="Reorder intent"
+          value={reorderRate == null ? "—" : `${Math.round(reorderRate)}%`}
+          hint={t.conversations ? `${t.reorderYes} yes · ${t.reorderMaybe} maybe` : "Share of conversations"}
+          tone={reorderRate != null && reorderRate >= 50 ? "good" : "neutral"}
+        />
+        <Stat
+          label="Reorder lift"
+          value={lift.points == null ? "—" : `${lift.points >= 0 ? "+" : ""}${lift.points.toFixed(0)} pts`}
+          hint={
+            lift.points == null
+              ? "Needs reorders in both groups"
+              : `${pct(lift.called.reordered, lift.called.enrolled)} called vs ${pct(lift.control.reordered, lift.control.enrolled)} control`
+          }
+          tone={lift.points == null ? "muted" : lift.points > 0 ? "good" : "warning"}
+        />
+        <Stat label="Open actions" value={t.openActions} hint={t.redFlags ? `${t.redFlags} red flag${t.redFlags === 1 ? "" : "s"}` : "Follow-ups for the team"} tone={t.openActions ? "warning" : "neutral"} />
+        <Stat
+          label="Cost per conversation"
+          value={perConversation == null ? "—" : fmtInrFromCents(perConversation)}
+          hint={perConversation == null ? "Telephony, speech and LLM" : `${fmtUsdCents(perConversation)} all-in`}
+        />
       </section>
 
-      <section>
-        <div className="mb-2 flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Contacts</h2>
-          <Link href="/import" className="text-sm underline">
-            Import
-          </Link>
+      <div className="grid gap-6 lg:grid-cols-5">
+        <Card
+          className="lg:col-span-3"
+          title="Action queue"
+          description="What the agent heard that a person must act on."
+          action={
+            <Link href="/actions" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+              All actions <ChevronRight className="size-3.5" aria-hidden />
+            </Link>
+          }
+          padded={false}
+        >
+          {data.openActions.length === 0 ? (
+            <EmptyState icon={Inbox} title="Nothing waiting" description="Follow-ups appear here as soon as a call finishes: WhatsApp links to send, callbacks, red flags." />
+          ) : (
+            <ul className="divide-y divide-line px-5">
+              {data.openActions.slice(0, 6).map(({ action, contact }) => (
+                <ActionItem
+                  key={action.id}
+                  action={action}
+                  contact={contact}
+                  compact
+                  whatsappHref={action.type === "send_link" && contact ? whatsappLink(contact.phone, reorderMessage(contact)) : undefined}
+                />
+              ))}
+            </ul>
+          )}
+        </Card>
+
+        <div className="space-y-6 lg:col-span-2">
+          <Card title="Cohorts" description="Who gets called, and when." padded={false}>
+            <ul className="divide-y divide-line">
+              {COHORTS.map((c) => {
+                const eligible = eligibleForCampaign(data.contacts, data.calls, c);
+                return (
+                  <li key={c} className="flex items-center justify-between gap-3 px-5 py-3">
+                    <div className="min-w-0">
+                      <Link href={`/contacts?cohort=${c}`} className="text-sm font-medium hover:underline">
+                        {COHORT_LABEL[c]}
+                      </Link>
+                      <div className="text-xs text-muted">{COHORT_HINT[c]}</div>
+                      <div className="mt-1 text-xs text-faint tnum">
+                        {t.byCohort[c].called} called · {t.byCohort[c].control} control
+                      </div>
+                    </div>
+                    <CampaignButton cohort={c} eligible={eligible.length} />
+                  </li>
+                );
+              })}
+            </ul>
+          </Card>
+
+          <Card
+            title="Agent"
+            action={
+              <Link href="/agent" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+                Configure <ChevronRight className="size-3.5" aria-hidden />
+              </Link>
+            }
+            padded={false}
+          >
+            <dl className="divide-y divide-line px-5">
+              <KeyValue label="Status">
+                {agentReady ? (
+                  <Badge tone="good" dot>
+                    Live on Bolna
+                  </Badge>
+                ) : (
+                  <Badge tone="warning" dot>
+                    Not configured
+                  </Badge>
+                )}
+              </KeyValue>
+              <KeyValue label="Voice">Suhani · Sarvam Bulbul</KeyValue>
+              <KeyValue label="Languages">{Object.values(LANGUAGES).join(", ")}</KeyValue>
+              <KeyValue label="Calling window">10:00 to 19:00 IST</KeyValue>
+              <KeyValue label="Telephony">Plivo via Bolna</KeyValue>
+              <KeyValue label="Webhook">
+                {webhookReady ? (
+                  <Badge tone="good" dot>
+                    Receiving
+                  </Badge>
+                ) : (
+                  <Badge tone="warning" dot>
+                    Polling only
+                  </Badge>
+                )}
+              </KeyValue>
+            </dl>
+          </Card>
         </div>
-        {contactRows.length === 0 ? (
-          <p className="text-sm text-gray-500">No contacts yet. Import a few, starting with your own number.</p>
-        ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-800">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left dark:bg-neutral-900">
-                <tr>
-                  <th className="p-2">Name</th>
-                  <th className="p-2">Phone</th>
-                  <th className="p-2">Lang</th>
-                  <th className="p-2">Cohort</th>
-                  <th className="p-2">Group</th>
-                  <th className="p-2">Product</th>
-                  <th className="p-2">Memory</th>
-                  <th className="p-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {contactRows.map((c) => (
-                  <tr key={c.id} className="border-t border-gray-100 dark:border-neutral-800">
-                    <td className="p-2 font-medium">
-                      {c.name}
-                      {c.doNotCall ? <span className="ml-2 rounded bg-red-100 px-1 text-xs text-red-700">do not call</span> : null}
-                    </td>
-                    <td className="p-2 font-mono text-xs">{c.phone}</td>
-                    <td className="p-2">{c.language}</td>
-                    <td className="p-2">{c.cohort}</td>
-                    <td className="p-2">{c.group}</td>
-                    <td className="p-2">{[c.product, c.flavour].filter(Boolean).join(" · ")}</td>
-                    <td className="max-w-xs truncate p-2 text-xs text-gray-500" title={c.lastSummary ?? ""}>
-                      {c.lastSummary ?? "—"}
-                    </td>
-                    <td className="p-2">
-                      <CallButton
-                        contactId={c.id}
-                        disabled={!agentReady || c.group === "control" || Boolean(c.doNotCall)}
-                        reason={c.group === "control" ? "Control group is never called" : undefined}
-                      />
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </section>
+      </div>
 
-      <section>
-        <h2 className="mb-2 text-lg font-semibold">Recent calls</h2>
-        {callRows.length === 0 ? (
-          <p className="text-sm text-gray-500">No calls yet.</p>
+      <Card
+        title="Recent calls"
+        action={
+          <Link href="/calls" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+            All calls <ChevronRight className="size-3.5" aria-hidden />
+          </Link>
+        }
+        padded={false}
+      >
+        {data.calls.length === 0 ? (
+          <EmptyState
+            icon={Mic}
+            title="No calls yet"
+            description="Press Call now on a customer, or talk to Dobara in the browser to see a conversation end to end."
+            action={<LinkButton href="/talk" variant="primary">Talk to Dobara</LinkButton>}
+          />
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-gray-200 dark:border-neutral-800">
-            <table className="w-full text-sm">
-              <thead className="bg-gray-50 text-left dark:bg-neutral-900">
-                <tr>
-                  <th className="p-2">When</th>
-                  <th className="p-2">Contact</th>
-                  <th className="p-2">Status</th>
-                  <th className="p-2">Secs</th>
-                  <th className="p-2">Reached</th>
-                  <th className="p-2">Usage</th>
-                  <th className="p-2">Issue</th>
-                  <th className="p-2">Reorder</th>
-                  <th className="p-2">Red flag</th>
-                  <th className="p-2"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {callRows.map(({ call, contact }) => {
-                  const f = flattenExtracted(call.extracted);
-                  const v = (name: string) => f[`${CATEGORY.name}/${name}`]?.objective ?? "";
-                  return (
-                    <tr key={call.id} className="border-t border-gray-100 dark:border-neutral-800">
-                      <td className="p-2 text-xs text-gray-500">{new Date(call.createdAt).toLocaleString("en-IN")}</td>
-                      <td className="p-2">
-                        <Link href={`/calls/${call.id}`} className="underline">
-                          {contact?.name ?? "unknown"}
-                        </Link>
-                      </td>
-                      <td className="p-2">{call.status}</td>
-                      <td className="p-2">{call.conversationDuration}</td>
-                      <td className="p-2">{v(D.reached)}</td>
-                      <td className="p-2">{v(D.usage)}</td>
-                      <td className="p-2">{v(D.issue)}</td>
-                      <td className="p-2">{v(D.reorderIntent)}</td>
-                      <td className="p-2">{v(D.redFlag)}</td>
-                      <td className="p-2">
-                        <RefreshButton callId={call.id} />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+          <Table>
+            <thead>
+              <tr>
+                <Th>When</Th>
+                <Th>Customer</Th>
+                <Th>Status</Th>
+                <Th align="right">Length</Th>
+                <Th>Reached</Th>
+                <Th>Stock left</Th>
+                <Th>Reorder</Th>
+                <Th>Red flag</Th>
+                <Th />
+              </tr>
+            </thead>
+            <tbody>
+              {data.calls.slice(0, 8).map(({ call, contact }) => {
+                const v = (name: string) => call.extracted?.[CATEGORY.name]?.[name]?.objective ?? null;
+                return (
+                  <Tr key={call.id}>
+                    <Td className="whitespace-nowrap text-xs text-muted">{fmtDateTime(call.createdAt)}</Td>
+                    <Td>
+                      <Link href={`/calls/${call.id}`} className="font-medium hover:underline">
+                        {contact?.name ?? (call.channel === "web" ? "Browser guest" : "Unknown")}
+                      </Link>
+                      {call.channel === "web" && <span className="ml-2 text-xs text-faint">browser</span>}
+                    </Td>
+                    <Td>
+                      <StatusBadge status={call.status} />
+                    </Td>
+                    <Td align="right" className="tnum">
+                      {fmtDuration(call.conversationDuration)}
+                    </Td>
+                    <Td>
+                      <ExtractionPill field={D.reached} value={v(D.reached)} />
+                    </Td>
+                    <Td>
+                      <ExtractionPill field={D.stock} value={v(D.stock)} />
+                    </Td>
+                    <Td>
+                      <ExtractionPill field={D.reorderIntent} value={v(D.reorderIntent)} />
+                    </Td>
+                    <Td>
+                      <ExtractionPill field={D.redFlag} value={v(D.redFlag)} />
+                    </Td>
+                    <Td align="right">
+                      <Link href={`/calls/${call.id}`} className="text-xs font-medium text-accent hover:underline">
+                        Open
+                      </Link>
+                    </Td>
+                  </Tr>
+                );
+              })}
+            </tbody>
+          </Table>
         )}
-      </section>
-    </div>
-  );
-}
-
-function Stat({ label, value, hint }: { label: string; value: number | string; hint?: string }) {
-  return (
-    <div className="rounded-lg border border-gray-200 p-3 dark:border-neutral-800">
-      <div className="text-xs uppercase tracking-wide text-gray-500">{label}</div>
-      <div className="text-2xl font-semibold">{value}</div>
-      {hint && <div className="text-xs text-gray-500">{hint}</div>}
+      </Card>
     </div>
   );
 }

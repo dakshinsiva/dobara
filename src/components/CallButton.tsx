@@ -2,11 +2,23 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { PhoneOutgoing } from "lucide-react";
+import { buttonClass } from "@/components/ui";
 
-export function CallButton({ contactId, disabled, reason }: { contactId: string; disabled?: boolean; reason?: string }) {
+export function CallButton({
+  contactId,
+  disabled,
+  reason,
+  size = "sm",
+}: {
+  contactId: string;
+  disabled?: boolean;
+  reason?: string;
+  size?: "sm" | "md";
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
-  const [msg, setMsg] = useState<string | null>(null);
+  const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
 
   async function call() {
     setBusy(true);
@@ -19,10 +31,10 @@ export function CallButton({ contactId, disabled, reason }: { contactId: string;
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? res.statusText);
-      setMsg("Dialling…");
+      setMsg({ text: "Dialling" });
       router.refresh();
     } catch (e) {
-      setMsg(e instanceof Error ? e.message : String(e));
+      setMsg({ text: e instanceof Error ? e.message : String(e), error: true });
     } finally {
       setBusy(false);
     }
@@ -30,15 +42,11 @@ export function CallButton({ contactId, disabled, reason }: { contactId: string;
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button
-        onClick={call}
-        disabled={busy || disabled}
-        title={reason}
-        className="rounded bg-black px-3 py-1 text-sm text-white disabled:cursor-not-allowed disabled:bg-gray-300 dark:bg-white dark:text-black"
-      >
+      <button onClick={call} disabled={busy || disabled} title={reason} className={buttonClass("primary", size)}>
+        <PhoneOutgoing className="size-3.5" aria-hidden />
         {busy ? "Calling…" : "Call now"}
       </button>
-      {msg && <span className="text-xs text-gray-500">{msg}</span>}
+      {msg && <span className={msg.error ? "text-xs text-danger-fg" : "text-xs text-muted"}>{msg.text}</span>}
     </span>
   );
 }

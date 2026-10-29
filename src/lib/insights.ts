@@ -225,3 +225,14 @@ export async function listActions(status: "open" | "done" | "all" = "open", limi
     .limit(limit);
   return status === "all" ? query : query.where(eq(actions.status, status));
 }
+
+/** Contacts a campaign would dial right now: called group, not opted out, no attempt in 24 h. */
+export function eligibleForCampaign(contactRows: Contact[], callRows: CallWithContact[], cohort?: Cohort): Contact[] {
+  const since = Date.now() - 24 * 3_600_000;
+  const recent = new Set(
+    callRows.filter((r) => r.call.contactId && new Date(r.call.createdAt).getTime() > since).map((r) => r.call.contactId)
+  );
+  return contactRows.filter(
+    (c) => c.group === "called" && !c.doNotCall && (!cohort || c.cohort === cohort) && !recent.has(c.id)
+  );
+}

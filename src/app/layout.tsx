@@ -1,30 +1,31 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+import { Geist, Geist_Mono } from "next/font/google";
+import { Sidebar } from "@/components/Sidebar";
+import { optionalEnv } from "@/lib/env";
+import { getOpenActionCount } from "@/lib/nav";
 import "./globals.css";
 
+const sans = Geist({ subsets: ["latin"], variable: "--font-geist-sans" });
+const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
+
 export const metadata: Metadata = {
-  title: "Dobara",
-  description: "Retention calls for consumer brands, built on Bolna and Plivo.",
+  title: { default: "Dobara", template: "%s · Dobara" },
+  description: "The retention agent for consumer brands. Voice check-ins that bring customers back.",
 };
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+  const brand = optionalEnv("BRAND_NAME", "Cosmix");
+  const openActions = await getOpenActionCount();
+
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-white text-gray-900 antialiased dark:bg-neutral-950 dark:text-gray-100">
-        <header className="border-b border-gray-200 dark:border-neutral-800">
-          <nav className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3 text-sm">
-            <Link href="/" className="font-semibold">
-              Dobara
-            </Link>
-            <Link href="/" className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">
-              Dashboard
-            </Link>
-            <Link href="/import" className="text-gray-600 hover:text-black dark:text-gray-400 dark:hover:text-white">
-              Import contacts
-            </Link>
-          </nav>
-        </header>
-        <main className="mx-auto max-w-6xl px-4 py-6">{children}</main>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+      <body className="min-h-screen bg-canvas text-fg">
+        <div className="min-h-screen md:grid md:grid-cols-[232px_minmax(0,1fr)]">
+          <Sidebar brand={brand} openActions={openActions} />
+          <div className="min-w-0">
+            <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">{children}</main>
+          </div>
+        </div>
       </body>
     </html>
   );

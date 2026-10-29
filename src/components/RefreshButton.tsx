@@ -2,8 +2,11 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { RefreshCw } from "lucide-react";
+import { buttonClass } from "@/components/ui";
 
-export function RefreshButton({ callId }: { callId: string }) {
+/** Pull the latest execution state from Bolna for one call. */
+export function RefreshButton({ callId, label = "Refresh" }: { callId: string; label?: string }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
@@ -25,14 +28,11 @@ export function RefreshButton({ callId }: { callId: string }) {
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button
-        onClick={refresh}
-        disabled={busy}
-        className="rounded border border-gray-300 px-2 py-1 text-xs hover:bg-gray-100 disabled:opacity-50 dark:border-gray-700 dark:hover:bg-gray-800"
-      >
-        {busy ? "…" : "Refresh"}
+      <button onClick={refresh} disabled={busy} className={buttonClass("ghost", "sm")} title="Fetch the latest state from Bolna">
+        <RefreshCw className={busy ? "size-3.5 animate-spin" : "size-3.5"} aria-hidden />
+        {label}
       </button>
-      {err && <span className="text-xs text-red-600">{err}</span>}
+      {err && <span className="text-xs text-danger-fg">{err}</span>}
     </span>
   );
 }
