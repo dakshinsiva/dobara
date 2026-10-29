@@ -35,7 +35,7 @@ const ERROR_TEXT: Record<CallError["code"], string> = {
  * Browser call to the same agent that phones customers. Audio flows over WebRTC;
  * the server mints a two-minute, single-use session so no API key reaches the browser.
  */
-export function WebCall({ personas }: { personas: Persona[] }) {
+export function WebCall({ personas, compact = false }: { personas: Persona[]; compact?: boolean }) {
   const router = useRouter();
   const [personaId, setPersonaId] = useState<string>(personas[0]?.id ?? "guest");
   const [guestName, setGuestName] = useState("Chiranjeevi");
@@ -162,7 +162,7 @@ export function WebCall({ personas }: { personas: Persona[] }) {
   };
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className={compact ? "grid gap-6" : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"}>
       <div className="rounded-xl border border-line bg-surface p-6 shadow-card md:p-8">
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-6 grid size-40 place-items-center">
@@ -240,22 +240,66 @@ export function WebCall({ personas }: { personas: Persona[] }) {
               Try again
             </button>
           )}
+          {compact && !inCall && (
+            <p className="mt-5 text-xs text-faint">
+              Calling as <span className="text-muted">{persona?.name ?? guestName}</span>
+              {persona?.hasMemory ? ", who it spoke to before" : ""}.{" "}
+              <Link href="/talk" className="underline hover:text-fg">
+                Choose another customer
+              </Link>
+            </p>
+          )}
         </div>
       </div>
 
-      <aside className="space-y-4">
-        <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
-          <div className="text-xs font-medium uppercase tracking-wider text-faint">Who is Dobara calling?</div>
-          <p className="mt-1 text-xs text-muted">
-            The agent loads this customer&apos;s product, cohort and memory from the last call.
-          </p>
-          <div className="mt-3 space-y-1.5">
-            {personas.map((p) => (
+      {!compact && (
+        <aside className="space-y-4">
+          <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
+            <div className="text-xs font-medium uppercase tracking-wider text-faint">Who is Dobara calling?</div>
+            <p className="mt-1 text-xs text-muted">
+              The agent loads this customer&apos;s product, cohort and memory from the last call.
+            </p>
+            <div className="mt-3 space-y-1.5">
+              {personas.map((p) => (
+                <label
+                  key={p.id}
+                  className={[
+                    "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm",
+                    personaId === p.id ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
+                    inCall && "pointer-events-none opacity-60",
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+                >
+                  <input
+                    type="radio"
+                    name="persona"
+                    value={p.id}
+                    checked={personaId === p.id}
+                    onChange={() => setPersonaId(p.id)}
+                    className="mt-1 accent-accent"
+                  />
+                  <span className="min-w-0">
+                    <span className="font-medium">{p.name}</span>
+                    <span className="block truncate text-xs text-muted">
+                      {[p.product, p.flavour].filter(Boolean).join(" · ") || "No product on file"}
+                    </span>
+                    <span className="mt-1 flex flex-wrap gap-1">
+                      <Badge tone="neutral">{COHORT_LABEL[p.cohort]}</Badge>
+                      <Badge tone="neutral">{LANGUAGE_LABEL[p.language]}</Badge>
+                      {p.hasMemory && (
+                        <Badge tone="info" dot>
+                          Remembers last call
+                        </Badge>
+                      )}
+                    </span>
+                  </span>
+                </label>
+              ))}
               <label
-                key={p.id}
                 className={[
                   "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm",
-                  personaId === p.id ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
+                  personaId === "guest" ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
                   inCall && "pointer-events-none opacity-60",
                 ]
                   .filter(Boolean)
@@ -264,81 +308,48 @@ export function WebCall({ personas }: { personas: Persona[] }) {
                 <input
                   type="radio"
                   name="persona"
-                  value={p.id}
-                  checked={personaId === p.id}
-                  onChange={() => setPersonaId(p.id)}
+                  value="guest"
+                  checked={personaId === "guest"}
+                  onChange={() => setPersonaId("guest")}
                   className="mt-1 accent-accent"
                 />
-                <span className="min-w-0">
-                  <span className="font-medium">{p.name}</span>
-                  <span className="block truncate text-xs text-muted">
-                    {[p.product, p.flavour].filter(Boolean).join(" · ") || "No product on file"}
+                <span className="min-w-0 flex-1">
+                  <span className="font-medium">Guest</span>
+                  <span className="block text-xs text-muted">
+                    A first-time call to someone running low on plant protein.
                   </span>
-                  <span className="mt-1 flex flex-wrap gap-1">
-                    <Badge tone="neutral">{COHORT_LABEL[p.cohort]}</Badge>
-                    <Badge tone="neutral">{LANGUAGE_LABEL[p.language]}</Badge>
-                    {p.hasMemory && (
-                      <Badge tone="info" dot>
-                        Remembers last call
-                      </Badge>
-                    )}
-                  </span>
+                  {personaId === "guest" && (
+                    <input
+                      value={guestName}
+                      onChange={(e) => setGuestName(e.target.value)}
+                      placeholder="Your name"
+                      aria-label="Guest name"
+                      className="mt-2 w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
+                    />
+                  )}
                 </span>
               </label>
-            ))}
-            <label
-              className={[
-                "flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2 text-sm",
-                personaId === "guest" ? "border-accent bg-accent-soft" : "border-line hover:bg-surface-2",
-                inCall && "pointer-events-none opacity-60",
-              ]
-                .filter(Boolean)
-                .join(" ")}
-            >
-              <input
-                type="radio"
-                name="persona"
-                value="guest"
-                checked={personaId === "guest"}
-                onChange={() => setPersonaId("guest")}
-                className="mt-1 accent-accent"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="font-medium">Guest</span>
-                <span className="block text-xs text-muted">
-                  A first-time call to someone running low on plant protein.
-                </span>
-                {personaId === "guest" && (
-                  <input
-                    value={guestName}
-                    onChange={(e) => setGuestName(e.target.value)}
-                    placeholder="Your name"
-                    aria-label="Guest name"
-                    className="mt-2 w-full rounded-md border border-line bg-surface px-2 py-1 text-sm"
-                  />
-                )}
-              </span>
-            </label>
+            </div>
           </div>
-        </div>
 
-        <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
-          <div className="text-xs font-medium uppercase tracking-wider text-faint">Things to try</div>
-          <ul className="mt-2 space-y-1.5 text-sm text-muted">
-            <li>Say you have &ldquo;about three scoops left&rdquo; and see the reorder offer.</li>
-            <li>Switch to Hindi, Kannada or Tamil mid-sentence.</li>
-            <li>Ask &ldquo;are you a bot?&rdquo; Dobara always says yes.</li>
-            <li>Mention bloating. The agent will not give medical advice.</li>
-            <li>Say &ldquo;stop calling me&rdquo; and watch the red flag land in Actions.</li>
-          </ul>
-          {persona?.hasMemory && (
-            <p className="mt-3 text-xs text-faint">
-              This customer has a memory from a previous call, so the agent should skip questions already answered.
-            </p>
-          )}
-          {runId && <p className="mt-3 font-mono text-[11px] text-faint">run {runId}</p>}
-        </div>
-      </aside>
+          <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
+            <div className="text-xs font-medium uppercase tracking-wider text-faint">Things to try</div>
+            <ul className="mt-2 space-y-1.5 text-sm text-muted">
+              <li>Say you have &ldquo;about three scoops left&rdquo; and see the reorder offer.</li>
+              <li>Switch to Hindi, Kannada or Tamil mid-sentence.</li>
+              <li>Ask &ldquo;are you a bot?&rdquo; Dobara always says yes.</li>
+              <li>Mention bloating. The agent will not give medical advice.</li>
+              <li>Say &ldquo;stop calling me&rdquo; and watch the red flag land in Actions.</li>
+            </ul>
+            {persona?.hasMemory && (
+              <p className="mt-3 text-xs text-faint">
+                This customer has a memory from a previous call, so the agent should skip questions already answered.
+              </p>
+            )}
+            {runId && <p className="mt-3 font-mono text-[11px] text-faint">run {runId}</p>}
+          </div>
+        </aside>
+      )}
     </div>
   );
 }

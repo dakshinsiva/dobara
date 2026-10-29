@@ -302,6 +302,7 @@ export interface Quote {
 
 export interface Insights {
   conversations: number;
+  funnel: FunnelStage[];
   distributions: Record<"usage" | "stock" | "satisfaction" | "issue" | "reorderIntent" | "redFlag", Bucket[]>;
   quotes: Quote[];
   lift: Lift;
@@ -310,7 +311,7 @@ export interface Insights {
 
 export async function getInsights(): Promise<Insights> {
   const db = getDb();
-  const [contactRows, rows] = await Promise.all([
+  const [contactRows, rows, allActions] = await Promise.all([
     db.select().from(contacts),
     db
       .select({ call: calls, contact: contacts })
@@ -318,7 +319,9 @@ export async function getInsights(): Promise<Insights> {
       .leftJoin(contacts, eq(calls.contactId, contacts.id))
       .orderBy(desc(calls.createdAt))
       .limit(1000),
+    listActions("all", 1000),
   ]);
+  const lift = computeLift(contactRows);
   const convs = rows.filter((r) => isConversation(r.call));
   const callsOnly = convs.map((r) => r.call);
 
@@ -339,6 +342,7 @@ export async function getInsights(): Promise<Insights> {
 
   return {
     conversations: convs.length,
+    funnel: computeFunnel(contactRows, rows, allActions, lift),
     distributions: {
       usage: distribution(callsOnly, D.usage, ["daily", "sometimes", "stopped", "not_started", "unknown"]),
       stock: distribution(callsOnly, D.stock, ["finished", "under_a_week", "more_than_a_week", "unknown"]),
@@ -348,7 +352,7 @@ export async function getInsights(): Promise<Insights> {
       redFlag: distribution(callsOnly, D.redFlag),
     },
     quotes,
-    lift: computeLift(contactRows),
+    lift,
     cost: {
       totalCents,
       perConversationCents: convs.length ? totalCents / convs.length : null,

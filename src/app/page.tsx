@@ -1,313 +1,237 @@
 import Link from "next/link";
-import { ChevronRight, Inbox, Mic, Upload } from "lucide-react";
-import { ActionItem } from "@/components/ActionItem";
+import { ArrowRight, Brain, Globe, ListChecks, ShieldCheck } from "lucide-react";
+import { and, desc, eq, gt } from "drizzle-orm";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { CampaignButton } from "@/components/CampaignButton";
-import { ExtractionPill } from "@/components/ExtractionPill";
-import { Funnel } from "@/components/Funnel";
 import { SetupNotice } from "@/components/SetupNotice";
-import {
-  Badge,
-  Card,
-  EmptyState,
-  KeyValue,
-  LinkButton,
-  PageHeader,
-  Stat,
-  StatusBadge,
-  Table,
-  Td,
-  Th,
-  Tr,
-} from "@/components/ui";
-import { CALLABLE_COHORTS } from "@/db/schema";
+import { Transcript } from "@/components/Transcript";
+import { WebCall, type Persona } from "@/components/WebCall";
+import { Badge, Card, LinkButton, PageHeader } from "@/components/ui";
+import { getDb, schema } from "@/db";
 import { optionalEnv } from "@/lib/env";
-import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
-import { describeSignificance, eligibleForCampaign, getOverview, type Overview } from "@/lib/insights";
-import { COHORT_HINT, COHORT_LABEL, isLive } from "@/lib/labels";
-import { reorderMessage, whatsappLink } from "@/lib/whatsapp";
+import { fmtDuration, fmtInrFromCents } from "@/lib/format";
+import { isConversation } from "@/lib/insights";
+import { isLive, LANGUAGE_LABEL } from "@/lib/labels";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
-import { LANGUAGES } from "../../bolna/agent.config.mjs";
 
 export const dynamic = "force-dynamic";
 
+const MARKET = [
+  {
+    value: "20 to 30%",
+    label: "of first-time buyers come back",
+    detail:
+      "Typical repeat rate for Indian D2C brands. Seven in ten customers are lost after one order, even for products that run out.",
+    source: "Indian D2C benchmarks, 2025–26",
+  },
+  {
+    value: "1,00,000",
+    label: "Shopify stores in India",
+    detail:
+      "Each one can connect to Dobara with a single read-only token. Cohorts build themselves from orders and deliveries.",
+    source: "Store Leads, 2025",
+  },
+  {
+    value: "₹13",
+    label: "for a two-minute conversation",
+    detail:
+      "In Hindi, Tamil, Kannada or English, telephony included. Cheaper than the SMS campaign it replaces, and it gets answered.",
+    source: "Bolna billing on our calls",
+  },
+];
+
+const CAPABILITIES = [
+  {
+    icon: Globe,
+    title: "Four languages, one agent",
+    text: "Starts in the customer's language and switches mid-sentence when they do.",
+  },
+  {
+    icon: Brain,
+    title: "Remembers the last call",
+    text: "Opens with what the customer said last time. No question asked twice.",
+  },
+  {
+    icon: ListChecks,
+    title: "Twelve answers per call",
+    text: "Usage, stock, satisfaction, issue, intent and more, extracted after hangup.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Says it is an AI",
+    text: "Never gives medical advice, never invents a price, honours stop forever.",
+  },
+];
+
 export default async function OverviewPage() {
   const brand = optionalEnv("BRAND_NAME", "Cosmix");
-  let data: Overview;
+  const agentReady = Boolean(process.env.BOLNA_AGENT_ID && process.env.BOLNA_API_KEY);
+
+  let personas: Persona[] = [];
+  let latest: { call: typeof schema.calls.$inferSelect; contact: typeof schema.contacts.$inferSelect | null } | null =
+    null;
+  let liveIds: string[] = [];
+  let conversations = 0;
+  let costCents = 0;
   try {
-    data = await getOverview();
+    const db = getDb();
+    const since = new Date(Date.now() - 24 * 3_600_000);
+    const [contactRows, callRows, recent] = await Promise.all([
+      db
+        .select()
+        .from(schema.contacts)
+        .where(and(eq(schema.contacts.group, "called"), eq(schema.contacts.doNotCall, 0)))
+        .orderBy(schema.contacts.createdAt)
+        .limit(6),
+      db
+        .select({ call: schema.calls, contact: schema.contacts })
+        .from(schema.calls)
+        .leftJoin(schema.contacts, eq(schema.calls.contactId, schema.contacts.id))
+        .orderBy(desc(schema.calls.createdAt))
+        .limit(200),
+      db
+        .select({ id: schema.calls.id, status: schema.calls.status, updatedAt: schema.calls.updatedAt })
+        .from(schema.calls)
+        .where(gt(schema.calls.updatedAt, since)),
+    ]);
+    personas = contactRows.map((c) => ({
+      id: c.id,
+      name: c.name,
+      product: c.product,
+      flavour: c.flavour,
+      cohort: c.cohort,
+      language: c.language,
+      hasMemory: Boolean(c.lastSummary),
+    }));
+    const convs = callRows.filter((r) => isConversation(r.call));
+    conversations = convs.length;
+    costCents = convs.reduce((s, r) => s + (r.call.totalCostCents ?? 0), 0);
+    latest = convs.find((r) => r.call.transcript) ?? null;
+    liveIds = recent.filter((c) => isLive(c)).map((c) => c.id);
   } catch (e) {
     return <SetupNotice error={e instanceof Error ? e.message : String(e)} />;
   }
 
-  const agentReady = Boolean(process.env.BOLNA_AGENT_ID && process.env.BOLNA_API_KEY);
-  const webhookReady = Boolean(process.env.PUBLIC_BASE_URL);
-  const t = data.totals;
-  const liveIds = data.calls.filter((r) => isLive(r.call)).map((r) => r.call.id);
-  const reorderRate = t.conversations ? (t.reorderYes / t.conversations) * 100 : null;
-  const perConversation = t.conversations ? t.costCents / t.conversations : null;
-  const lift = data.lift;
+  const memory =
+    latest?.call.extracted?.[CATEGORY.name]?.[D.nextCallSummary]?.subjective ?? latest?.call.summary ?? null;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-10">
       <PageHeader
         eyebrow={`${brand} · Retention`}
-        title="Overview"
-        description="Dobara calls customers at the moment they would otherwise lapse, remembers every conversation, and turns what it hears into follow-ups and reorders."
+        title="Dobara calls your customers before they lapse, in their language."
+        description="The retention agent for consumer brands. It remembers every conversation, turns what it hears into follow-ups, and proves the lift against customers it never called."
         actions={
           <>
             <AutoRefresh callIds={liveIds} />
-            <LinkButton href="/import" variant="secondary">
-              <Upload className="size-4" aria-hidden />
-              Import
-            </LinkButton>
-            <LinkButton href="/talk" variant="primary">
-              <Mic className="size-4" aria-hidden />
-              Talk to Dobara
-            </LinkButton>
+            {agentReady ? (
+              <Badge tone="good" dot>
+                Live on Bolna · Plivo · Sarvam
+              </Badge>
+            ) : (
+              <Badge tone="warning" dot>
+                Agent not configured
+              </Badge>
+            )}
           </>
         }
       />
 
       {!agentReady && (
-        <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so calls cannot be started yet." />
+        <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so the agent cannot answer yet." />
       )}
 
-      <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6" aria-label="Key figures">
-        <Stat label="Customers enrolled" value={t.contacts} hint={`${t.called} called · ${t.control} control`} />
-        <Stat
-          label="Conversations"
-          value={t.conversations}
-          hint={t.conversations ? `${pct(t.reached, t.conversations)} reached the customer` : "No completed calls yet"}
-        />
-        <Stat
-          label="Reorder intent"
-          value={reorderRate == null ? "—" : `${Math.round(reorderRate)}%`}
-          hint={t.conversations ? `${t.reorderYes} yes · ${t.reorderMaybe} maybe` : "Share of conversations"}
-          tone={reorderRate != null && reorderRate >= 50 ? "good" : "neutral"}
-        />
-        <Stat
-          label="Reorder lift"
-          value={lift.points == null ? "—" : `${lift.points >= 0 ? "+" : ""}${lift.points.toFixed(0)} pts`}
-          hint={
-            lift.points == null
-              ? "Needs reorders in both groups"
-              : `${pct(lift.called.reordered, lift.called.enrolled)} called vs ${pct(lift.control.reordered, lift.control.enrolled)} control`
-          }
-          tone={lift.points == null ? "muted" : lift.points > 0 ? "good" : "warning"}
-        />
-        <Stat
-          label="Open actions"
-          value={t.openActions}
-          hint={t.redFlags ? `${t.redFlags} red flag${t.redFlags === 1 ? "" : "s"}` : "Follow-ups for the team"}
-          tone={t.openActions ? "warning" : "neutral"}
-        />
-        <Stat
-          label="Cost per conversation"
-          value={perConversation == null ? "—" : fmtInrFromCents(perConversation)}
-          hint={perConversation == null ? "Telephony, speech and LLM" : `${fmtUsdCents(perConversation)} all-in`}
-        />
-      </section>
-
-      <section aria-label="Funnel" className="space-y-2">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-sm font-semibold">From eligible to incremental</h2>
-          <p className="text-right text-xs text-muted">{describeSignificance(lift)}</p>
+      <section aria-label="Talk to Dobara" className="grid gap-6 lg:grid-cols-5">
+        <div className="lg:col-span-3">
+          <WebCall personas={personas} compact />
         </div>
-        <Funnel stages={data.funnel} />
+        <div className="space-y-3 lg:col-span-2">
+          {CAPABILITIES.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="flex gap-3 rounded-xl border border-line bg-surface px-4 py-3 shadow-card">
+              <span className="mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent">
+                <Icon className="size-4" aria-hidden />
+              </span>
+              <div>
+                <div className="text-sm font-medium">{title}</div>
+                <p className="text-sm text-muted">{text}</p>
+              </div>
+            </div>
+          ))}
+          <p className="px-1 text-xs text-faint">
+            Or phone a real customer from{" "}
+            <Link href="/contacts" className="underline hover:text-fg">
+              Customers
+            </Link>
+            .
+            {conversations > 0 &&
+              ` ${conversations} conversation${conversations === 1 ? "" : "s"} so far at ${fmtInrFromCents(costCents / conversations)} each.`}
+          </p>
+        </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-5">
-        <Card
-          className="lg:col-span-3"
-          title="Action queue"
-          description="What the agent heard that a person must act on."
-          action={
+      <section aria-label="Why retention" className="space-y-3">
+        <h2 className="text-sm font-semibold">Why this matters for brands in India</h2>
+        <div className="grid gap-4 md:grid-cols-3">
+          {MARKET.map((m) => (
+            <div key={m.value} className="rounded-xl border border-line bg-surface p-5 shadow-card">
+              <div className="text-3xl font-semibold tracking-tight text-accent">{m.value}</div>
+              <div className="mt-1 text-sm font-medium">{m.label}</div>
+              <p className="mt-2 text-sm leading-6 text-muted">{m.detail}</p>
+              <div className="mt-3 text-xs text-faint">{m.source}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {latest && (
+        <section aria-label="A real conversation" className="space-y-3">
+          <div className="flex items-baseline justify-between gap-4">
+            <h2 className="text-sm font-semibold">What a call sounds like</h2>
             <Link
-              href="/actions"
+              href={`/calls/${latest.call.id}`}
               className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
             >
-              All actions <ChevronRight className="size-3.5" aria-hidden />
+              Full call <ArrowRight className="size-3.5" aria-hidden />
             </Link>
-          }
-          padded={false}
-        >
-          {data.openActions.length === 0 ? (
-            <EmptyState
-              icon={Inbox}
-              title="Nothing waiting"
-              description="Follow-ups appear here as soon as a call finishes: WhatsApp links to send, callbacks, red flags."
-            />
-          ) : (
-            <ul className="divide-y divide-line px-5">
-              {data.openActions.slice(0, 6).map(({ action, contact }) => (
-                <ActionItem
-                  key={action.id}
-                  action={action}
-                  contact={contact}
-                  compact
-                  whatsappHref={
-                    action.type === "send_link" && contact
-                      ? whatsappLink(contact.phone, reorderMessage(contact))
-                      : undefined
-                  }
+          </div>
+          <div className="grid gap-6 lg:grid-cols-5">
+            <Card
+              className="lg:col-span-3"
+              title={latest.contact?.name ?? "Customer"}
+              description={`${latest.contact ? LANGUAGE_LABEL[latest.contact.language] : ""} · ${fmtDuration(latest.call.conversationDuration)} · ${fmtInrFromCents(latest.call.totalCostCents)}`}
+            >
+              {latest.call.executionId && latest.call.recordingUrl && (
+                <audio
+                  controls
+                  preload="none"
+                  className="mb-4 w-full"
+                  src={`/api/recordings/${latest.call.executionId}`}
                 />
-              ))}
-            </ul>
-          )}
-        </Card>
-
-        <div className="space-y-6 lg:col-span-2">
-          <Card
-            title="Cohorts"
-            description={`Who gets called, and when.${t.byCohort.active.called + t.byCohort.active.control ? ` ${t.byCohort.active.called + t.byCohort.active.control} active customers are not due yet.` : ""}`}
-            padded={false}
-          >
-            <ul className="divide-y divide-line">
-              {CALLABLE_COHORTS.map((c) => {
-                const eligible = eligibleForCampaign(data.contacts, data.calls, c);
-                return (
-                  <li key={c} className="flex items-center justify-between gap-3 px-5 py-3">
-                    <div className="min-w-0">
-                      <Link href={`/contacts?cohort=${c}`} className="text-sm font-medium hover:underline">
-                        {COHORT_LABEL[c]}
-                      </Link>
-                      <div className="text-xs text-muted">{COHORT_HINT[c]}</div>
-                      <div className="mt-1 text-xs text-faint tnum">
-                        {t.byCohort[c].called} called · {t.byCohort[c].control} control
-                      </div>
-                    </div>
-                    <CampaignButton cohort={c} eligible={eligible.length} />
-                  </li>
-                );
-              })}
-            </ul>
-          </Card>
-
-          <Card
-            title="Agent"
-            action={
-              <Link
-                href="/agent"
-                className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-              >
-                Configure <ChevronRight className="size-3.5" aria-hidden />
-              </Link>
-            }
-            padded={false}
-          >
-            <dl className="divide-y divide-line px-5">
-              <KeyValue label="Status">
-                {agentReady ? (
-                  <Badge tone="good" dot>
-                    Live on Bolna
-                  </Badge>
-                ) : (
-                  <Badge tone="warning" dot>
-                    Not configured
-                  </Badge>
-                )}
-              </KeyValue>
-              <KeyValue label="Voice">Suhani · Sarvam Bulbul</KeyValue>
-              <KeyValue label="Languages">{Object.values(LANGUAGES).join(", ")}</KeyValue>
-              <KeyValue label="Calling window">10:00 to 19:00 IST</KeyValue>
-              <KeyValue label="Telephony">Plivo via Bolna</KeyValue>
-              <KeyValue label="Webhook">
-                {webhookReady ? (
-                  <Badge tone="good" dot>
-                    Receiving
-                  </Badge>
-                ) : (
-                  <Badge tone="warning" dot>
-                    Polling only
-                  </Badge>
-                )}
-              </KeyValue>
-            </dl>
-          </Card>
-        </div>
-      </div>
-
-      <Card
-        title="Recent calls"
-        action={
-          <Link
-            href="/calls"
-            className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
-          >
-            All calls <ChevronRight className="size-3.5" aria-hidden />
-          </Link>
-        }
-        padded={false}
-      >
-        {data.calls.length === 0 ? (
-          <EmptyState
-            icon={Mic}
-            title="No calls yet"
-            description="Press Call now on a customer, or talk to Dobara in the browser to see a conversation end to end."
-            action={
-              <LinkButton href="/talk" variant="primary">
-                Talk to Dobara
-              </LinkButton>
-            }
-          />
-        ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>When</Th>
-                <Th>Customer</Th>
-                <Th>Status</Th>
-                <Th align="right">Length</Th>
-                <Th>Reached</Th>
-                <Th>Stock left</Th>
-                <Th>Reorder</Th>
-                <Th>Red flag</Th>
-                <Th />
-              </tr>
-            </thead>
-            <tbody>
-              {data.calls.slice(0, 8).map(({ call, contact }) => {
-                const v = (name: string) => call.extracted?.[CATEGORY.name]?.[name]?.objective ?? null;
-                return (
-                  <Tr key={call.id}>
-                    <Td className="whitespace-nowrap text-xs text-muted">{fmtDateTime(call.createdAt)}</Td>
-                    <Td>
-                      <Link href={`/calls/${call.id}`} className="font-medium hover:underline">
-                        {contact?.name ?? (call.channel === "web" ? "Browser guest" : "Unknown")}
-                      </Link>
-                      {call.channel === "web" && <span className="ml-2 text-xs text-faint">browser</span>}
-                    </Td>
-                    <Td>
-                      <StatusBadge status={call.status} />
-                    </Td>
-                    <Td align="right" className="tnum">
-                      {fmtDuration(call.conversationDuration)}
-                    </Td>
-                    <Td>
-                      <ExtractionPill field={D.reached} value={v(D.reached)} />
-                    </Td>
-                    <Td>
-                      <ExtractionPill field={D.stock} value={v(D.stock)} />
-                    </Td>
-                    <Td>
-                      <ExtractionPill field={D.reorderIntent} value={v(D.reorderIntent)} />
-                    </Td>
-                    <Td>
-                      <ExtractionPill field={D.redFlag} value={v(D.redFlag)} />
-                    </Td>
-                    <Td align="right">
-                      <Link href={`/calls/${call.id}`} className="text-xs font-medium text-accent hover:underline">
-                        Open
-                      </Link>
-                    </Td>
-                  </Tr>
-                );
-              })}
-            </tbody>
-          </Table>
-        )}
-      </Card>
+              )}
+              <Transcript text={latest.call.transcript} limit={6} />
+            </Card>
+            <Card
+              className="lg:col-span-2"
+              title={
+                <span className="inline-flex items-center gap-1.5">
+                  <Brain className="size-4 text-accent" aria-hidden /> Saved for the next call
+                </span>
+              }
+            >
+              <p className="text-sm leading-6">
+                {memory ?? <span className="text-faint">Written when the call completes.</span>}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                <LinkButton href="/insights" variant="secondary" size="sm">
+                  Lift and insights
+                </LinkButton>
+                <LinkButton href="/actions" variant="secondary" size="sm">
+                  Follow-ups
+                </LinkButton>
+              </div>
+            </Card>
+          </div>
+        </section>
+      )}
     </div>
   );
 }

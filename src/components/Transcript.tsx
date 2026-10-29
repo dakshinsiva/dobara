@@ -1,8 +1,8 @@
 import { Bot, UserRound } from "lucide-react";
 
 /** Bolna transcripts are "assistant: …" / "user: …" lines. Render them as a conversation. */
-export function Transcript({ text }: { text: string | null | undefined }) {
-  const lines = (text ?? "")
+export function Transcript({ text, limit }: { text: string | null | undefined; limit?: number }) {
+  const all = (text ?? "")
     .split("\n")
     .map((l) => l.trim())
     .filter(Boolean)
@@ -12,6 +12,7 @@ export function Transcript({ text }: { text: string | null | undefined }) {
         ? { role: m[1].toLowerCase() as "assistant" | "user", text: m[2] }
         : { role: "assistant" as const, text: l };
     });
+  const lines = limit ? all.slice(0, limit) : all;
 
   if (lines.length === 0) return <p className="text-sm text-muted">No transcript yet.</p>;
 
@@ -42,6 +43,9 @@ export function Transcript({ text }: { text: string | null | undefined }) {
           </li>
         );
       })}
+      {limit && all.length > limit && (
+        <li className="pl-8 text-xs text-faint">{all.length - limit} more lines in the full transcript</li>
+      )}
     </ol>
   );
 }
