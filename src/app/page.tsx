@@ -1,7 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Mic, PhoneOutgoing } from "lucide-react";
 import { AutoRefresh } from "@/components/AutoRefresh";
-import { Funnel } from "@/components/Funnel";
 import { SetupNotice } from "@/components/SetupNotice";
 import { Badge, Bar, Card, EmptyState, LinkButton, PageHeader, Stat, Table, Td, Th, Tr } from "@/components/ui";
 import { activeCalls } from "@/lib/calls";
@@ -224,11 +223,6 @@ export default async function OverviewPage() {
               </dl>
             </Card>
           </div>
-
-          <section aria-label="Funnel" className="space-y-2">
-            <h2 className="text-sm font-semibold">This programme, eligible to incremental</h2>
-            <Funnel stages={h.funnel} />
-          </section>
 
           <Card
             title="By product"
