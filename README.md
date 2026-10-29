@@ -141,4 +141,3 @@ src/lib/shopify/  Admin GraphQL client, cohort rules, sync, sample store
 - The Bolna API key lives only in `.env.local` (git-ignored) and on the server. Browser calls use short-lived sessions minted by `/api/web-call/session`; recordings are proxied through `/api/recordings/[id]`.
 - The webhook rejects requests without the shared `token`.
 - Customer data stays in your Postgres. Nothing is sent anywhere except Bolna (to place the call) and WhatsApp (by a team member, from the Actions page).
-
