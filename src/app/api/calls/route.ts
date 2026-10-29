@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { startCallForContact } from "@/lib/calls";
-import { BolnaError } from "@/lib/bolna";
+import { errorResponse, parseJson } from "@/lib/http";
 
 export const runtime = "nodejs";
 
@@ -11,19 +11,16 @@ const Body = z.object({
   bypassGuardrails: z.boolean().default(true),
 });
 
-/** Start an outbound call to one contact. */
+/** Start an outbound phone call to one contact. */
 export async function POST(req: Request) {
-  const parsed = Body.safeParse(await req.json().catch(() => null));
-  if (!parsed.success) {
-    return NextResponse.json({ error: "contactId (uuid) required" }, { status: 400 });
-  }
+  const parsed = await parseJson(req, Body);
+  if (!parsed.ok) return parsed.res;
   try {
     const call = await startCallForContact(parsed.data.contactId, {
       bypassGuardrails: parsed.data.bypassGuardrails,
     });
     return NextResponse.json({ ok: true, call });
   } catch (err) {
-    const status = err instanceof BolnaError ? 502 : 400;
-    return NextResponse.json({ error: err instanceof Error ? err.message : String(err) }, { status });
+    return errorResponse(err);
   }
 }
