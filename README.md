@@ -134,7 +134,6 @@ src/components/   UI primitives (components/ui) and feature components
 src/db/           Drizzle schema and driver selection (PGlite, Neon, pg)
 src/lib/          Bolna client, call lifecycle, insights, labels, formatting
 src/lib/shopify/  Admin GraphQL client, cohort rules, sync, sample store
-docs/             buildathon research, positioning, team, roadmap
 ```
 
 ## Security notes
@@ -143,6 +142,3 @@ docs/             buildathon research, positioning, team, roadmap
 - The webhook rejects requests without the shared `token`.
 - Customer data stays in your Postgres. Nothing is sent anywhere except Bolna (to place the call) and WhatsApp (by a team member, from the Actions page).
 
-## Roadmap
-
-See [docs/ROADMAP.md](docs/ROADMAP.md) for what we would build next and why.
