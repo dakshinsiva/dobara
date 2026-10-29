@@ -9,7 +9,7 @@ if (!url) {
   process.exit(1);
 }
 
-const sql = "TRUNCATE actions, calls, contacts RESTART IDENTITY CASCADE";
+const sql = "TRUNCATE actions, calls, contacts, integrations RESTART IDENTITY CASCADE";
 
 if (url.startsWith("pglite://")) {
   const { PGlite } = await import("@electric-sql/pglite");
@@ -30,4 +30,4 @@ if (url.startsWith("pglite://")) {
     await client.end();
   }
 }
-console.log("All contacts, calls and actions removed.");
+console.log("All contacts, calls, actions and store connections removed.");
