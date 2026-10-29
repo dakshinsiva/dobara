@@ -6,17 +6,15 @@ Before you start: Bolna wallet topped up, `pnpm agent:sync` run against the curr
 
 ---
 
-## 1. Overview (20 seconds)
+## 1. Overview (30 seconds)
 
 ![Overview](demo/01-overview.png)
 
-**On screen:** the Cosmix retention workspace. Six numbers, the action queue, the three cohorts with Call cohort buttons, the agent status.
+**On screen:** the retention health of the customer base. Six numbers across the top, the lifecycle split, why customers leave, called versus control, the funnel, and a per-product table.
 
-**Say:** "This is Cosmix's retention workspace. Twenty-five customers, nineteen in the called group and six held out as control. Dobara calls customers at the moment they would otherwise lapse, remembers every conversation, and turns what it hears into follow-ups and reorders. Everything on this screen fills in by itself from the brand's Shopify store."
+**Say:** "This is what a retention lead at Cosmix opens in the morning. Repeat rate, days between orders, how many customers run out this week and what that is worth, how many have lapsed. The bar is the whole base by stage. Below it, why customers leave, in their own words from the calls, and whether calling them changes anything, measured against a control group we never call. Every number on this page comes from the store's orders and from Dobara's conversations."
 
 **Click:** Connect store in the sidebar.
-
----
 
 ## 2. Connect store (40 seconds)
 
