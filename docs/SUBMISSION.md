@@ -98,7 +98,7 @@ Record the screen at 1440×900, light mode, with the sidebar visible. Use the re
 
 **What does it do, in one sentence?** It calls a brand's customers before they lapse, in their language, and brings them back.
 
-**Who pays, and how much?** The brand. ₹30 per completed conversation at launch; a conversation costs us ₹13. One saved reorder (₹1,500 to ₹2,500 at Cosmix) pays for a hundred calls. We move to a share of attributed reorders once lift is proven across a few brands.
+**Who pays, and how much?** The brand. ₹30 per reached conversation, pay as you go, no platform fee; no-answers are free. A conversation costs us ₹13. One saved reorder (₹1,500 to ₹2,500 at Cosmix) pays for fifty to eighty conversations, so the brand is ahead at a one-point lift. Every brand starts with a two-week free pilot that ends in a written lift readout. Lift-based billing, a share of incremental reorders measured against the control group, is the premium option for portfolio deals.
 
 **What are the numbers?** Give the live figures: customers enrolled, conversations, reach rate, reorder intent, reorders recorded in each group, cost per conversation. Update them the morning of the interview.
 
@@ -122,7 +122,21 @@ Record the screen at 1440×900, light mode, with the sidebar visible. Use the re
 
 ---
 
-## 6. Pre-submission checklist (do in this order)
+## 6. What to showcase, in priority order
+
+Judging weights market potential first, then the working demo, then technical depth. The shortlist is decided from the description, the link and the video. Showcase accordingly.
+
+1. **A real call, heard.** Sixty seconds of real audio with subtitles in the video, and the recording on the Calls page. Nothing else proves the product.
+2. **The lift card with real reorders.** Even two reorders in the called group against zero in control. It is the only slide a judge has not seen from another team.
+3. **The link that talks.** Talk to Dobara on the deployed app. A judge who speaks to it remembers it.
+4. **One token onboarding.** Connect store, Sync now, cohorts appear. Thirty seconds of video, and the strongest "this is a product, not a demo" moment.
+5. **Memory across calls.** The call page's before and after. Show the second call opening with what the first one learned.
+6. **The action queue with WhatsApp.** Promises become tasks; a person presses send.
+7. **The founder pairing.** Operator at the first brand plus the engineer who shipped it, in one sentence.
+
+Leave out of the video: the agent configuration page, the stack, latency numbers beyond one mention, and the roadmap. They belong in the interview, not the submission.
+
+## 7. Pre-submission checklist (do in this order)
 
 1. Top up Bolna (moves off trial, enables real numbers).
 2. Deploy to Vercel with Neon; set `PUBLIC_BASE_URL`, `WEBHOOK_SECRET`, `INTEGRATION_SECRET`, `CRON_SECRET`; run `pnpm agent:sync` against the live URL.
