@@ -128,6 +128,25 @@ export interface StartCallResponse {
   execution_id: string;
 }
 
+/** Ephemeral browser-call session minted by POST /web-call/session (about 120 s, single use). */
+export interface WebCallSession {
+  run_id: string;
+  agent_id: string;
+  sip_username: string;
+  sip_password: string;
+  sip_domain: string;
+  wss_url: string;
+  sip_register: boolean;
+  expires_in: number;
+  ice_servers: unknown[];
+}
+
+export interface WebCallSessionBody {
+  agent_id: string;
+  user_data?: Record<string, unknown>;
+  agent_data?: { language?: string };
+}
+
 export interface ObjectiveOption {
   value: string;
   condition: string;
@@ -166,6 +185,19 @@ export const bolna = {
 
   getExecution: (executionId: string) =>
     request<ExecutionPayload>(`/executions/${executionId}`),
+
+  /** Mint a browser (WebRTC) call session. The API key stays on the server; the browser gets SIP creds. */
+  createWebCallSession: async (body: WebCallSessionBody) => {
+    try {
+      return await request<WebCallSession>("/web-call/session", { method: "POST", body });
+    } catch (err) {
+      // Older docs name the endpoint differently; fall back once on 404.
+      if (err instanceof BolnaError && err.status === 404) {
+        return request<WebCallSession>("/web-call/freeswitch-session", { method: "POST", body });
+      }
+      throw err;
+    }
+  },
 
   listExtractionCategories: (agentId: string) =>
     request<Array<{ id: string; name: string; model: string }>>(
