@@ -1,6 +1,5 @@
 import Link from "next/link";
 import { ChartColumn } from "lucide-react";
-import { Funnel } from "@/components/Funnel";
 import { SetupNotice } from "@/components/SetupNotice";
 import { Badge, Bar, Card, EmptyState, LinkButton, PageHeader, Stat } from "@/components/ui";
 import { fmtDate, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
@@ -59,14 +58,6 @@ export default async function InsightsPage() {
           }
           tone={lift.points == null ? "muted" : lift.points > 0 ? "good" : "warning"}
         />
-      </section>
-
-      <section aria-label="Funnel" className="space-y-2">
-        <div className="flex items-baseline justify-between gap-4">
-          <h2 className="text-sm font-semibold">From eligible to incremental</h2>
-          <p className="text-right text-xs text-muted">{describeSignificance(lift)}</p>
-        </div>
-        <Funnel stages={data.funnel} />
       </section>
 
       {data.conversations === 0 ? (

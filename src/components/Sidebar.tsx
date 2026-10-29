@@ -6,6 +6,7 @@ import {
   ChartColumn,
   LayoutDashboard,
   ListChecks,
+  MessageCircleMore,
   Mic,
   Moon,
   Sun,
@@ -38,6 +39,7 @@ export function Sidebar({
     { href: "/actions", label: "Actions", icon: ListChecks, badge: openActions },
     { href: "/insights", label: "Insights", icon: ChartColumn },
     { href: "/talk", label: "Talk to Dobara", icon: Mic, accent: true },
+    { href: "/ask", label: "Ask Dobara", icon: MessageCircleMore },
   ];
   const secondary: Item[] = [
     { href: "/connect", label: "Connect store", icon: Store },

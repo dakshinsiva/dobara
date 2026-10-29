@@ -132,6 +132,16 @@ Point at the lift card.
 
 ---
 
+## 8b. Ask Dobara (30 seconds)
+
+![Ask Dobara](demo/09-ask.png)
+
+**On screen:** a chat over the workspace with a microphone. Suggested questions, a language picker for speech, a "read answers aloud" toggle.
+
+**Say:** "The same data, by voice. Ask it who is running low, why customers leave, what Nikita said on her last call. It reads the customers, the calls and the lift before it answers, and it answers in Hindi, Tamil or Kannada if you ask in them."
+
+**Click:** the microphone, ask "who is running low this week?", let it answer, then switch on read-aloud and ask "is calling working?".
+
 ## 9. Agent (interview only, 20 seconds)
 
 ![Agent](demo/08-agent.png)
