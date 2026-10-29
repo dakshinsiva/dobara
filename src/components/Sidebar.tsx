@@ -87,6 +87,14 @@ export function Sidebar({
           <span className="text-base font-semibold tracking-tight">Dobara</span>
         </Link>
         <div className="ml-auto flex items-center gap-2 md:hidden">
+          <a
+            href={`/api/theme?set=${nextTheme}&back=${encodeURIComponent(pathname)}`}
+            className="grid size-8 place-items-center rounded-lg text-muted hover:bg-surface-2 hover:text-fg"
+            title="Switch theme"
+            aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
+          >
+            {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
+          </a>
           <WorkspaceChip brand={brand} />
         </div>
       </div>

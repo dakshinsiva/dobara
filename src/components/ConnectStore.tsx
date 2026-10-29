@@ -29,12 +29,40 @@ export function ConnectStore({ connection, defaults }: { connection: Connection;
   );
   const [busy, setBusy] = useState<"connect" | "sync" | "disconnect" | null>(null);
   const [msg, setMsg] = useState<{ text: string; error?: boolean } | null>(null);
-  const isSample = /\/api\/sample-store$/.test(shop);
 
-  function useSample() {
-    setShop(`${window.location.origin}/api/sample-store`);
+  async function loadSample() {
+    const sampleShop = `${window.location.origin}/api/sample-store`;
+    setShop(sampleShop);
     setToken("sample");
+    setBusy("connect");
     setMsg(null);
+    try {
+      const res = await fetch("/api/integrations/shopify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          shop: sampleShop,
+          token: "sample",
+          settings: { daysPerOrder, calledShare: calledShare / 100 },
+        }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error ?? res.statusText);
+      setBusy("sync");
+      const r2 = await fetch("/api/integrations/shopify/sync", { method: "POST" });
+      const j2 = await r2.json();
+      if (!r2.ok) throw new Error(j2.error ?? r2.statusText);
+      const s = j2.summary as SyncSummary;
+      setToken("");
+      setMsg({
+        text: `Sample store loaded: ${s.customers} customers across every cohort. Open Customers to see them, or Talk to Dobara to hear a call.`,
+      });
+      router.refresh();
+    } catch (e) {
+      setMsg({ text: e instanceof Error ? e.message : String(e), error: true });
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function connect() {
@@ -177,8 +205,8 @@ export function ConnectStore({ connection, defaults }: { connection: Connection;
           </button>
         )}
         {!connection && (
-          <button onClick={useSample} disabled={busy != null} className={buttonClass("ghost", "md")}>
-            Try the sample store
+          <button onClick={loadSample} disabled={busy != null} className={buttonClass("secondary", "md")}>
+            {busy === "sync" ? "Syncing sample store…" : "Load the sample store instead"}
           </button>
         )}
         {connection && (
@@ -193,10 +221,10 @@ export function ConnectStore({ connection, defaults }: { connection: Connection;
         )}
       </div>
 
-      {isSample && !connection && (
+      {!connection && (
         <p className="text-xs text-muted">
-          The sample store is built into this app: 24 customers of an Indian plant-protein brand across every cohort.
-          Press Connect, then Sync.
+          No store yet? The sample store is built in: 24 customers of an Indian plant-protein brand across every cohort,
+          loaded with one click.
         </p>
       )}
 
