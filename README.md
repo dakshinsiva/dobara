@@ -1,80 +1,112 @@
 # Dobara
 
-Retention calls for consumer brands. A voice agent calls a brand's customers after delivery, in their language, remembers every past call, handles why they'd lapse, and reports reorder intent against an uncalled control group.
+**The retention agent for consumer brands.** Dobara phones a brand's customers at the moment they would otherwise lapse, in their own language, remembers every past conversation, and turns what it hears into follow-ups, product insight and measured reorder lift.
 
-Built for the Bolna Buildathon at Symphony 2026.
+Built for the Bolna Buildathon at Symphony 2026, with Cosmix as the first design partner.
+
+> _Dobara_ (दोबारा) means "again" in Hindi.
+
+## What it does
+
+| For the customer                                                                                          | For the brand                                                                                          |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
+| A two-minute call from a named assistant that already knows what they bought and what they said last time | **Action queue**: WhatsApp reorder links, callbacks and red flags, ready to clear                      |
+| English, Hindi, Kannada or Tamil, switching mid-sentence                                                  | **Customer memory**: every call opens with the summary of the last one                                 |
+| Never sold to, never given medical advice, always told it is an AI                                        | **Voice of the customer**: usage, stock, satisfaction, issues and verbatim change requests, aggregated |
+| One tap to opt out, honoured forever                                                                      | **Reorder lift**: the called group measured against an uncalled control group from the same import     |
+
+Three cohorts drive the calls: **new** (delivered 4 to 7 days ago), **running low** (about to run out) and **lapsed** (no order in 60 days). Each has its own conversation flow in a single prompt.
+
+There is also a **Talk to Dobara** page: the same agent over the browser microphone (WebRTC), so a judge or a brand lead can hear it without a phone.
 
 ## Stack
 
-| Layer       | Choice                                                                           | Why                                                                                                              |
-| ----------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| Telephony   | **Plivo**, through Bolna                                                         | Buildathon partner. Bolna's shared +91 numbers are Plivo-hosted; a number you buy or link in Bolna is Plivo too. |
-| Voice agent | **Bolna** hosted API (`/v2/agent`, `/call`, extractions, webhooks)               | Orchestration, turn-taking, interruptions, multilingual switching, post-call extraction.                         |
-| Speech      | **Sarvam** `saaras:v4` (STT) and `bulbul` (TTS)                                  | Best Indic accuracy; on Bolna's flat-rate list. English, Hindi, Kannada, Tamil with auto switching.              |
-| LLM         | OpenAI `gpt-4.1-mini` via Bolna                                                  | Flat-rate, low latency; GPT-5 variants are a one-line change.                                                    |
-| App         | **Next.js 16** (App Router, TypeScript, Tailwind 4) on **Vercel**                | Dashboard, import, webhook receiver.                                                                             |
-| Database    | **Postgres**: Neon via Vercel Marketplace in production, embedded PGlite locally | Drizzle ORM; hand-written SQL migration; same schema everywhere.                                                 |
+| Layer         | Choice                                                                                  | Why                                                                                                              |
+| ------------- | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Telephony     | **Plivo**, through Bolna                                                                | Buildathon partner. Bolna's shared +91 numbers are Plivo-hosted; a number you buy or link in Bolna is Plivo too. |
+| Voice agent   | **Bolna** hosted API (`/v2/agent`, `/call`, `/web-call/session`, extractions, webhooks) | Orchestration, turn-taking, interruptions, multilingual switching, post-call extraction.                         |
+| Speech        | **Sarvam** `saaras:v4` (STT) and `bulbul:v3` (TTS, voice Suhani)                        | Best Indic accuracy; on Bolna's flat-rate list.                                                                  |
+| LLM           | OpenAI `gpt-4.1-mini` via Bolna                                                         | Flat-rate, low latency; a one-line change to swap.                                                               |
+| Browser calls | `@bolna/web-call`                                                                       | WebRTC to the same agent; sessions minted server-side so the API key never reaches the browser.                  |
+| App           | **Next.js 16** (App Router, TypeScript, Tailwind 4) on **Vercel**                       | Console, import, webhook receiver.                                                                               |
+| Database      | **Postgres**: Neon via Vercel Marketplace in production, embedded PGlite locally        | Drizzle ORM; hand-written SQL migrations; same schema everywhere.                                                |
 
-Everything brand-specific (prompt, extractions, keywords) lives in `bolna/`.
+Everything brand-specific (prompt, extraction fields, transcription keywords) lives in [`bolna/`](bolna/).
 
-## Setup
+## Quick start
 
 ```bash
 pnpm install
-cp .env.example .env.local      # fill BOLNA_API_KEY and DATABASE_URL
-pnpm db:migrate                 # creates contacts and calls tables
-pnpm bolna:me                   # checks the API key, prints wallet balance
-pnpm agent:sync                 # creates the agent + extractions on Bolna; paste BOLNA_AGENT_ID into .env.local
-pnpm dev                        # http://localhost:3000
+cp .env.example .env.local        # fill BOLNA_API_KEY
+pnpm db:migrate                   # creates the tables in the embedded database
+pnpm bolna:me                     # checks the key, prints wallet balance
+pnpm agent:sync                   # creates the agent + extraction fields on Bolna; paste BOLNA_AGENT_ID into .env.local
+pnpm dev                          # http://localhost:3000
 ```
 
-Then open **Import contacts**, paste a CSV starting with your own number, go back to the dashboard and press **Call now**.
-
-### Database options
-
-- **Local, zero setup (default):** `DATABASE_URL=pglite://.data/dobara` runs an embedded Postgres (PGlite) on disk. Nothing to install. Only one process can open it at a time, so stop `pnpm dev` before running `pnpm db:migrate`.
-- **Local Postgres or Docker:** `DATABASE_URL=postgres://postgres:dobara@localhost:5432/dobara` (for example `docker run -d --name dobara-pg -e POSTGRES_PASSWORD=dobara -e POSTGRES_DB=dobara -p 5432:5432 postgres:16-alpine`).
-- **Neon (production):** `vercel link`, then `vercel integration add neon`, then `vercel env pull .env.local --yes`. The app uses Neon's HTTP driver automatically when the URL contains `neon.tech`.
+Then open **Import data**, paste a CSV starting with your own number, go to **Customers** and press **Call now**. Or open **Talk to Dobara** and speak to it in the browser.
 
 ### Webhooks
 
-Bolna posts the full execution payload to `PUBLIC_BASE_URL/api/webhooks/bolna?token=WEBHOOK_SECRET` on every status change. Locally, expose the dev server with `ngrok http 3000`, put the ngrok URL in `PUBLIC_BASE_URL`, and run `pnpm agent:sync` again so the agent's webhook URL updates. Without a webhook, the **Refresh** button on each call pulls the execution from Bolna.
+Bolna posts the full execution payload to `PUBLIC_BASE_URL/api/webhooks/bolna?token=WEBHOOK_SECRET` on every status change. Locally, expose the dev server with `ngrok http 3000`, put the ngrok URL in `PUBLIC_BASE_URL`, and run `pnpm agent:sync` again so the agent's webhook URL updates. Without a webhook the console polls Bolna for calls in flight, and every call has a **Refresh** button.
 
-Bolna's webhook source IPs are 13.203.39.153, 13.126.9.249 and 13.202.133.53 if you ever need to allowlist.
+Bolna's webhook source IPs are 13.203.39.153, 13.126.9.249 and 13.202.133.53 if you need to allowlist.
 
-### Plivo: shared number vs your own
+### Database options
+
+- **Local, zero setup (default):** `DATABASE_URL=pglite://.data/dobara` runs an embedded Postgres on disk. Only one process can open it at a time, so stop `pnpm dev` before `pnpm db:migrate` or `pnpm db:reset`.
+- **Any Postgres:** `DATABASE_URL=postgres://user:pass@host:5432/dobara`.
+- **Neon (production):** `vercel link`, then `vercel integration add neon`, then `vercel env pull .env.local --yes`. The Neon HTTP driver is picked automatically when the URL contains `neon.tech`.
+
+### Plivo: shared number or your own
 
 - Default: leave `BOLNA_FROM_NUMBER` blank. Calls go out from Bolna's shared Plivo +91 number. No KYC, works immediately.
-- Own number: buy a Plivo number inside Bolna (needs the Indian compliance application: CIN + GST), or link your own Plivo account under Settings → Integrations in the Bolna dashboard. Then set `BOLNA_FROM_NUMBER`. Truecaller business verification is $20/month per number.
+- Own number: buy a Plivo number inside Bolna (Indian compliance: CIN + GST), or link your Plivo account under Settings → Integrations in Bolna, then set `BOLNA_FROM_NUMBER`. Truecaller business verification is $20/month per number and lifts answer rates.
 
 ## How a call works
 
-1. `POST /api/calls` with a `contactId` builds `user_data` (name, product, flavour, days since order, cohort, last call summary, offer) and calls Bolna `/call` with `agent_data.language` set to the contact's language.
-2. Bolna dials over Plivo, runs the multilingual agent (`bolna/agent.config.mjs`, prompt in `bolna/prompts.mjs`), and after hangup runs one extraction pass with the dispositions in `bolna/dispositions.mjs`.
-3. The webhook (or Refresh) stores status, transcript, summary, extractions, recording URL and cost in `calls`.
-4. On `completed`, the contact's `last_summary` is updated from the "Next call summary" extraction so the next call opens with memory. "Do not call" flags and callback requests land in `notes`.
+1. `POST /api/calls` with a `contactId` builds `user_data` (name, product, flavour, days since order, cohort, last call summary, offer) and calls Bolna `/call` with `agent_data.language` set to the customer's language.
+2. Bolna dials over Plivo, runs the multilingual agent ([`bolna/agent.config.mjs`](bolna/agent.config.mjs), prompt in [`bolna/prompts.mjs`](bolna/prompts.mjs)), and after hangup runs one extraction pass with the twelve fields in [`bolna/dispositions.mjs`](bolna/dispositions.mjs).
+3. The webhook (or a refresh) stores status, transcript, summary, extractions, recording URL and cost in `calls`.
+4. On completion, [`applyExecution`](src/lib/calls.ts) writes the customer's memory (`contacts.last_summary`), sets `do_not_call` if asked, and creates **actions**: send the WhatsApp link, call back, CX follow-up, red flag.
+5. Browser calls follow the same path: `POST /api/web-call/session` mints a two-minute, single-use session and registers the run id, so the webhook enriches it like any phone call.
 
 ## Experiment design
 
-Imports split phones into `called` and `control` groups by a stable hash (default 70/30). Control contacts can never be dialled from the app. Compare reorders between the groups over the same window to measure lift.
+Imports split phone numbers into **called** and **control** by a stable hash (default 70/30). Control customers can never be dialled from the app. When the brand records reorders (Import data → Record reorders), both groups are matched by phone and the Insights page reports the difference in reorder rate as lift. Re-imports never move a customer between groups.
 
 ## Scripts
 
-| Script                         | What it does                                                                  |
-| ------------------------------ | ----------------------------------------------------------------------------- |
-| `pnpm db:migrate`              | Applies `drizzle/*.sql` (idempotent)                                          |
-| `pnpm agent:sync`              | Creates or updates the Bolna agent and its extraction category + dispositions |
-| `pnpm bolna:me`                | Verifies the API key                                                          |
-| `pnpm typecheck` / `pnpm lint` | TypeScript and ESLint                                                         |
+| Script                                         | What it does                                                                     |
+| ---------------------------------------------- | -------------------------------------------------------------------------------- |
+| `pnpm dev` / `pnpm build` / `pnpm start`       | Next.js                                                                          |
+| `pnpm lint` / `pnpm typecheck` / `pnpm format` | ESLint, `tsc --noEmit`, Prettier                                                 |
+| `pnpm db:migrate`                              | Applies `drizzle/*.sql` in order (idempotent)                                    |
+| `pnpm db:reset`                                | Truncates all tables for a clean demo                                            |
+| `pnpm agent:sync`                              | Creates or updates the Bolna agent, extraction category and fields from `bolna/` |
+| `pnpm bolna:me`                                | Prints the Bolna account and wallet                                              |
 
-## Layout
+CI (GitHub Actions) runs format check, lint, typecheck and build on every push and pull request.
+
+## Repository layout
 
 ```
-bolna/            agent config, prompt, dispositions (brand-specific, no secrets)
+bolna/            agent config, prompt, extraction fields (brand-specific, synced to Bolna)
 drizzle/          SQL migrations
-scripts/          node scripts (no build step; Node 22 --env-file)
-src/db/           Drizzle schema and lazy client (Neon HTTP or pg)
-src/lib/          Bolna client, call orchestration, env helpers
-src/app/          dashboard, import page, call detail, API routes
-docs/             research, positioning, team notes
+scripts/          migrate, reset, agent sync, whoami (plain Node, no build step)
+src/app/          console pages and API routes (App Router)
+src/components/   UI primitives (components/ui) and feature components
+src/db/           Drizzle schema and driver selection (PGlite, Neon, pg)
+src/lib/          Bolna client, call lifecycle, insights, labels, formatting
+docs/             buildathon research, positioning, team, roadmap
 ```
+
+## Security notes
+
+- The Bolna API key lives only in `.env.local` (git-ignored) and on the server. Browser calls use short-lived sessions minted by `/api/web-call/session`; recordings are proxied through `/api/recordings/[id]`.
+- The webhook rejects requests without the shared `token`.
+- Customer data stays in your Postgres. Nothing is sent anywhere except Bolna (to place the call) and WhatsApp (by a team member, from the Actions page).
+
+## Roadmap
+
+See [docs/ROADMAP.md](docs/ROADMAP.md) for what we would build next and why.
