@@ -43,9 +43,16 @@ function distribution(rows: Call[], field: string, order?: string[]): Bucket[] {
     counts.set(v, (counts.get(v) ?? 0) + 1);
   }
   const total = [...counts.values()].reduce((a, b) => a + b, 0);
-  const keys = order ? [...order.filter((k) => counts.has(k)), ...[...counts.keys()].filter((k) => !order.includes(k))] : [...counts.keys()];
+  const keys = order
+    ? [...order.filter((k) => counts.has(k)), ...[...counts.keys()].filter((k) => !order.includes(k))]
+    : [...counts.keys()];
   return keys
-    .map((k) => ({ value: k, label: humanize(k), count: counts.get(k) ?? 0, share: total ? (counts.get(k) ?? 0) / total : 0 }))
+    .map((k) => ({
+      value: k,
+      label: humanize(k),
+      count: counts.get(k) ?? 0,
+      share: total ? (counts.get(k) ?? 0) / total : 0,
+    }))
     .sort((a, b) => (order ? 0 : b.count - a.count));
 }
 
@@ -136,7 +143,9 @@ export async function getOverview(): Promise<Overview> {
       byCohort,
       conversations: conversations.length,
       reached: conversations.filter((r) => value(r.call, D.reached) === "yes").length,
-      reorderYes: conversations.filter((r) => ["yes", "already_reordered"].includes(value(r.call, D.reorderIntent) ?? "")).length,
+      reorderYes: conversations.filter((r) =>
+        ["yes", "already_reordered"].includes(value(r.call, D.reorderIntent) ?? "")
+      ).length,
       reorderMaybe: conversations.filter((r) => value(r.call, D.reorderIntent) === "maybe").length,
       redFlags: conversations.filter((r) => (value(r.call, D.redFlag) ?? "none") !== "none").length,
       openActions: openActions.length,
@@ -230,7 +239,9 @@ export async function listActions(status: "open" | "done" | "all" = "open", limi
 export function eligibleForCampaign(contactRows: Contact[], callRows: CallWithContact[], cohort?: Cohort): Contact[] {
   const since = Date.now() - 24 * 3_600_000;
   const recent = new Set(
-    callRows.filter((r) => r.call.contactId && new Date(r.call.createdAt).getTime() > since).map((r) => r.call.contactId)
+    callRows
+      .filter((r) => r.call.contactId && new Date(r.call.createdAt).getTime() > since)
+      .map((r) => r.call.contactId)
   );
   return contactRows.filter(
     (c) => c.group === "called" && !c.doNotCall && (!cohort || c.cohort === cohort) && !recent.has(c.id)

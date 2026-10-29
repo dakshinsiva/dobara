@@ -34,7 +34,9 @@ const GUARDRAILS = [
 export default async function AgentPage() {
   const account = await getAccount();
   const agentId = process.env.BOLNA_AGENT_ID;
-  const webhook = process.env.PUBLIC_BASE_URL ? `${process.env.PUBLIC_BASE_URL.replace(/\/$/, "")}/api/webhooks/bolna` : null;
+  const webhook = process.env.PUBLIC_BASE_URL
+    ? `${process.env.PUBLIC_BASE_URL.replace(/\/$/, "")}/api/webhooks/bolna`
+    : null;
   const offer = optionalEnv("OFFER_TEXT", "10% off the next order with code DOBARA10, valid for 7 days");
 
   return (
@@ -85,7 +87,9 @@ export default async function AgentPage() {
             <KeyValue label="Model">gpt-4.1-mini via Bolna</KeyValue>
             <KeyValue label="Temperature">0.3</KeyValue>
             <KeyValue label="Max reply">300 tokens, under two sentences</KeyValue>
-            <KeyValue label="Post-call extraction">{DISPOSITIONS.length} fields · {CATEGORY.model}</KeyValue>
+            <KeyValue label="Post-call extraction">
+              {DISPOSITIONS.length} fields · {CATEGORY.model}
+            </KeyValue>
           </dl>
         </Card>
 
@@ -154,10 +158,16 @@ export default async function AgentPage() {
             <KeyValue label="Bolna account">{account?.name ?? "—"}</KeyValue>
             <KeyValue label="Wallet">{account?.wallet != null ? fmtUsdCents(account.wallet) : "—"}</KeyValue>
             <KeyValue label="Concurrency">
-              {account?.concurrency ? `${account.concurrency.current ?? 0} of ${account.concurrency.max ?? "—"} lines` : "—"}
+              {account?.concurrency
+                ? `${account.concurrency.current ?? 0} of ${account.concurrency.max ?? "—"} lines`
+                : "—"}
             </KeyValue>
             <KeyValue label="Webhook">
-              {webhook ? <span className="break-all font-mono text-[11px]">{webhook}</span> : <Badge tone="warning">Not set</Badge>}
+              {webhook ? (
+                <span className="break-all font-mono text-[11px]">{webhook}</span>
+              ) : (
+                <Badge tone="warning">Not set</Badge>
+              )}
             </KeyValue>
             <KeyValue label="Offer in prompt">
               <span className="text-xs">{offer}</span>
@@ -166,7 +176,11 @@ export default async function AgentPage() {
         </Card>
       </div>
 
-      <Card title="What the agent extracts after every call" description="Objective fields are classified from a fixed option list; subjective fields are short free text." padded={false}>
+      <Card
+        title="What the agent extracts after every call"
+        description="Objective fields are classified from a fixed option list; subjective fields are short free text."
+        padded={false}
+      >
         <ul className="divide-y divide-line">
           {DISPOSITIONS.map((d) => (
             <li key={d.name} className="grid gap-2 px-5 py-3 md:grid-cols-[12rem_1fr]">
@@ -190,7 +204,9 @@ export default async function AgentPage() {
 
       <Card title="Greeting">
         <p className="text-sm leading-6">&ldquo;{WELCOME_MESSAGE}&rdquo;</p>
-        <p className="mt-2 text-xs text-faint">Variables in double braces are filled per customer from the workspace.</p>
+        <p className="mt-2 text-xs text-faint">
+          Variables in double braces are filled per customer from the workspace.
+        </p>
       </Card>
 
       <details className="rounded-xl border border-line bg-surface shadow-card">

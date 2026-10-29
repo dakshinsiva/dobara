@@ -63,8 +63,14 @@ export function ReorderForm() {
             className="rounded-lg border border-line bg-surface px-2 py-1.5 text-sm"
           />
         </label>
-        <span className="text-xs text-faint">{phones.length} number{phones.length === 1 ? "" : "s"}</span>
-        <button onClick={submit} disabled={busy || phones.length === 0} className={buttonClass("primary", "md", "ml-auto")}>
+        <span className="text-xs text-faint">
+          {phones.length} number{phones.length === 1 ? "" : "s"}
+        </span>
+        <button
+          onClick={submit}
+          disabled={busy || phones.length === 0}
+          className={buttonClass("primary", "md", "ml-auto")}
+        >
           <TrendingUp className="size-4" aria-hidden />
           {busy ? "Recording…" : "Record reorders"}
         </button>

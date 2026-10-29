@@ -53,7 +53,9 @@ export default async function InsightsPage() {
         <Stat
           label="Reorder lift"
           value={lift.points == null ? "—" : `${lift.points >= 0 ? "+" : ""}${lift.points.toFixed(0)} pts`}
-          hint={lift.relative == null ? "Needs reorders in both groups" : `${Math.round(lift.relative * 100)}% relative`}
+          hint={
+            lift.relative == null ? "Needs reorders in both groups" : `${Math.round(lift.relative * 100)}% relative`
+          }
           tone={lift.points == null ? "muted" : lift.points > 0 ? "good" : "warning"}
         />
       </section>
@@ -64,7 +66,11 @@ export default async function InsightsPage() {
             icon={ChartColumn}
             title="No conversations yet"
             description="Insights fill in as calls complete. Place a call or talk to Dobara in the browser."
-            action={<LinkButton href="/talk" variant="primary">Talk to Dobara</LinkButton>}
+            action={
+              <LinkButton href="/talk" variant="primary">
+                Talk to Dobara
+              </LinkButton>
+            }
           />
         </Card>
       ) : (
@@ -100,12 +106,17 @@ export default async function InsightsPage() {
                 ))}
               </div>
               <p className="mt-4 text-xs leading-5 text-faint">
-                Record reorders from the order export on the Import page. Phones are assigned to groups by a stable hash, so
-                re-imports never move a customer between groups.
+                Record reorders from the order export on the Import page. Phones are assigned to groups by a stable
+                hash, so re-imports never move a customer between groups.
               </p>
             </Card>
 
-            <Card className="lg:col-span-3" title="In their words" description="Change requests and complaints, verbatim where the agent could capture them." padded={false}>
+            <Card
+              className="lg:col-span-3"
+              title="In their words"
+              description="Change requests and complaints, verbatim where the agent could capture them."
+              padded={false}
+            >
               {data.quotes.length === 0 ? (
                 <p className="p-5 text-sm text-faint">No quotes captured yet.</p>
               ) : (
@@ -118,7 +129,9 @@ export default async function InsightsPage() {
                         </Link>
                         <span>{fmtDate(q.at)}</span>
                         {q.issue && q.issue !== "none" && <Badge tone="warning">{humanize(q.issue)}</Badge>}
-                        {q.satisfaction && q.satisfaction !== "unknown" && <Badge tone="neutral">{humanize(q.satisfaction)}</Badge>}
+                        {q.satisfaction && q.satisfaction !== "unknown" && (
+                          <Badge tone="neutral">{humanize(q.satisfaction)}</Badge>
+                        )}
                       </div>
                       {q.changeRequest && <p className="mt-1.5 leading-6">&ldquo;{q.changeRequest}&rdquo;</p>}
                       {q.issueDetail && <p className="mt-1 leading-6 text-muted">{q.issueDetail}</p>}

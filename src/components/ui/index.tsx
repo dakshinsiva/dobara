@@ -256,7 +256,15 @@ export function Table({ children, className }: { children: ReactNode; className?
   );
 }
 
-export function Th({ children, className, align = "left" }: { children?: ReactNode; className?: string; align?: "left" | "right" }) {
+export function Th({
+  children,
+  className,
+  align = "left",
+}: {
+  children?: ReactNode;
+  className?: string;
+  align?: "left" | "right";
+}) {
   return (
     <th
       scope="col"

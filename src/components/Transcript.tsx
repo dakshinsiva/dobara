@@ -8,7 +8,9 @@ export function Transcript({ text }: { text: string | null | undefined }) {
     .filter(Boolean)
     .map((l) => {
       const m = l.match(/^(assistant|user)\s*:\s*(.*)$/i);
-      return m ? { role: m[1].toLowerCase() as "assistant" | "user", text: m[2] } : { role: "assistant" as const, text: l };
+      return m
+        ? { role: m[1].toLowerCase() as "assistant" | "user", text: m[2] }
+        : { role: "assistant" as const, text: l };
     });
 
   if (lines.length === 0) return <p className="text-sm text-muted">No transcript yet.</p>;

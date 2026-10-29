@@ -31,7 +31,10 @@ export default async function ActionsPage(props: { searchParams: Promise<{ statu
               <Link
                 key={s}
                 href={s === "open" ? "/actions" : "/actions?status=done"}
-                className={cx("rounded-md px-3 py-1.5 capitalize", view === s ? "bg-accent-soft font-medium text-accent" : "text-muted hover:text-fg")}
+                className={cx(
+                  "rounded-md px-3 py-1.5 capitalize",
+                  view === s ? "bg-accent-soft font-medium text-accent" : "text-muted hover:text-fg"
+                )}
               >
                 {s}
               </Link>
@@ -53,7 +56,11 @@ export default async function ActionsPage(props: { searchParams: Promise<{ statu
                 key={action.id}
                 action={action}
                 contact={contact}
-                whatsappHref={action.type === "send_link" && contact ? whatsappLink(contact.phone, reorderMessage(contact)) : undefined}
+                whatsappHref={
+                  action.type === "send_link" && contact
+                    ? whatsappLink(contact.phone, reorderMessage(contact))
+                    : undefined
+                }
               />
             ))}
           </ul>

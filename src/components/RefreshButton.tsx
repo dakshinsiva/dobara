@@ -28,7 +28,12 @@ export function RefreshButton({ callId, label = "Refresh" }: { callId: string; l
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button onClick={refresh} disabled={busy} className={buttonClass("ghost", "sm")} title="Fetch the latest state from Bolna">
+      <button
+        onClick={refresh}
+        disabled={busy}
+        className={buttonClass("ghost", "sm")}
+        title="Fetch the latest state from Bolna"
+      >
         <RefreshCw className={busy ? "size-3.5 animate-spin" : "size-3.5"} aria-hidden />
         {label}
       </button>

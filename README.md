@@ -6,14 +6,14 @@ Built for the Bolna Buildathon at Symphony 2026.
 
 ## Stack
 
-| Layer | Choice | Why |
-| --- | --- | --- |
-| Telephony | **Plivo**, through Bolna | Buildathon partner. Bolna's shared +91 numbers are Plivo-hosted; a number you buy or link in Bolna is Plivo too. |
-| Voice agent | **Bolna** hosted API (`/v2/agent`, `/call`, extractions, webhooks) | Orchestration, turn-taking, interruptions, multilingual switching, post-call extraction. |
-| Speech | **Sarvam** `saaras:v4` (STT) and `bulbul` (TTS) | Best Indic accuracy; on Bolna's flat-rate list. English, Hindi, Kannada, Tamil with auto switching. |
-| LLM | OpenAI `gpt-4.1-mini` via Bolna | Flat-rate, low latency; GPT-5 variants are a one-line change. |
-| App | **Next.js 16** (App Router, TypeScript, Tailwind 4) on **Vercel** | Dashboard, import, webhook receiver. |
-| Database | **Postgres**: Neon via Vercel Marketplace in production, embedded PGlite locally | Drizzle ORM; hand-written SQL migration; same schema everywhere. |
+| Layer       | Choice                                                                           | Why                                                                                                              |
+| ----------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Telephony   | **Plivo**, through Bolna                                                         | Buildathon partner. Bolna's shared +91 numbers are Plivo-hosted; a number you buy or link in Bolna is Plivo too. |
+| Voice agent | **Bolna** hosted API (`/v2/agent`, `/call`, extractions, webhooks)               | Orchestration, turn-taking, interruptions, multilingual switching, post-call extraction.                         |
+| Speech      | **Sarvam** `saaras:v4` (STT) and `bulbul` (TTS)                                  | Best Indic accuracy; on Bolna's flat-rate list. English, Hindi, Kannada, Tamil with auto switching.              |
+| LLM         | OpenAI `gpt-4.1-mini` via Bolna                                                  | Flat-rate, low latency; GPT-5 variants are a one-line change.                                                    |
+| App         | **Next.js 16** (App Router, TypeScript, Tailwind 4) on **Vercel**                | Dashboard, import, webhook receiver.                                                                             |
+| Database    | **Postgres**: Neon via Vercel Marketplace in production, embedded PGlite locally | Drizzle ORM; hand-written SQL migration; same schema everywhere.                                                 |
 
 Everything brand-specific (prompt, extractions, keywords) lives in `bolna/`.
 
@@ -60,12 +60,12 @@ Imports split phones into `called` and `control` groups by a stable hash (defaul
 
 ## Scripts
 
-| Script | What it does |
-| --- | --- |
-| `pnpm db:migrate` | Applies `drizzle/*.sql` (idempotent) |
-| `pnpm agent:sync` | Creates or updates the Bolna agent and its extraction category + dispositions |
-| `pnpm bolna:me` | Verifies the API key |
-| `pnpm typecheck` / `pnpm lint` | TypeScript and ESLint |
+| Script                         | What it does                                                                  |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `pnpm db:migrate`              | Applies `drizzle/*.sql` (idempotent)                                          |
+| `pnpm agent:sync`              | Creates or updates the Bolna agent and its extraction category + dispositions |
+| `pnpm bolna:me`                | Verifies the API key                                                          |
+| `pnpm typecheck` / `pnpm lint` | TypeScript and ESLint                                                         |
 
 ## Layout
 

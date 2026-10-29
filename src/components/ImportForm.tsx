@@ -87,8 +87,14 @@ export function ImportForm() {
             {share}% / {100 - share}%
           </span>
         </label>
-        <span className="text-xs text-faint">{rows.length} row{rows.length === 1 ? "" : "s"} parsed</span>
-        <button onClick={submit} disabled={busy || rows.length === 0} className={buttonClass("primary", "md", "ml-auto")}>
+        <span className="text-xs text-faint">
+          {rows.length} row{rows.length === 1 ? "" : "s"} parsed
+        </span>
+        <button
+          onClick={submit}
+          disabled={busy || rows.length === 0}
+          className={buttonClass("primary", "md", "ml-auto")}
+        >
           <Upload className="size-4" aria-hidden />
           {busy ? "Importing…" : "Import customers"}
         </button>

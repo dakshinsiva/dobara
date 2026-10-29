@@ -53,10 +53,7 @@ async function loadCallableContact(contactId: string): Promise<Contact> {
   return contact;
 }
 
-export async function startCallForContact(
-  contactId: string,
-  opts: { bypassGuardrails?: boolean } = {}
-): Promise<Call> {
+export async function startCallForContact(contactId: string, opts: { bypassGuardrails?: boolean } = {}): Promise<Call> {
   const db = getDb();
   const contact = await loadCallableContact(contactId);
 
@@ -88,9 +85,10 @@ export async function startCallForContact(
  * Mint a browser-call session for the dashboard's "Talk to Dobara" button and
  * register the run so the webhook can enrich it like any phone call.
  */
-export async function startWebCall(
-  input: { contactId?: string; guestName?: string }
-): Promise<{ session: WebCallSession; call: Call }> {
+export async function startWebCall(input: {
+  contactId?: string;
+  guestName?: string;
+}): Promise<{ session: WebCallSession; call: Call }> {
   const db = getDb();
   let contact: Contact | null = null;
   if (input.contactId) contact = await loadCallableContact(input.contactId);
@@ -162,7 +160,10 @@ function subjective(extracted: ExtractedData | null | undefined, name: string): 
 }
 
 /** Follow-ups a brand's team must do after this call, derived from the extraction pass. */
-export function deriveActions(extracted: ExtractedData, contact: Pick<Contact, "product" | "flavour">): Array<Pick<NewAction, "type" | "detail">> {
+export function deriveActions(
+  extracted: ExtractedData,
+  contact: Pick<Contact, "product" | "flavour">
+): Array<Pick<NewAction, "type" | "detail">> {
   const out: Array<{ type: ActionType; detail: string | null }> = [];
 
   if (objective(extracted, D.sendLink) === "yes") {
@@ -244,7 +245,9 @@ export async function applyExecution(payload: ExecutionPayload): Promise<Call | 
 
     const existing = await db.select({ type: actions.type }).from(actions).where(eq(actions.callId, call.id));
     const have = new Set(existing.map((a) => a.type));
-    const fresh = deriveActions(extracted, contact ?? { product: null, flavour: null }).filter((a) => !have.has(a.type));
+    const fresh = deriveActions(extracted, contact ?? { product: null, flavour: null }).filter(
+      (a) => !have.has(a.type)
+    );
     if (fresh.length) {
       await db.insert(actions).values(fresh.map((a) => ({ ...a, contactId: call.contactId, callId: call.id })));
     }

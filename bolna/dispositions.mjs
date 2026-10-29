@@ -26,7 +26,10 @@ export const DISPOSITIONS = [
     is_objective: true,
     objective_options: [
       { value: "yes", condition: "The customer engaged and answered at least one question" },
-      { value: "wrong_person", condition: "Someone other than the customer answered and the customer was not available" },
+      {
+        value: "wrong_person",
+        condition: "Someone other than the customer answered and the customer was not available",
+      },
       { value: "no", condition: "No real conversation: immediate hangup, voicemail, silence, or only a greeting" },
     ],
   },
@@ -44,7 +47,8 @@ export const DISPOSITIONS = [
   },
   {
     name: D.stock,
-    question: "How much of the product does the customer have left? Treat answers like '30% left' or 'a few scoops' as under a week; 'half a tub' or 'just opened it' as more than a week.",
+    question:
+      "How much of the product does the customer have left? Treat answers like '30% left' or 'a few scoops' as under a week; 'half a tub' or 'just opened it' as more than a week.",
     is_objective: true,
     objective_options: [
       { value: "finished", condition: "They have finished it" },

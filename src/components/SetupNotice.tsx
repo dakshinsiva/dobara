@@ -15,7 +15,8 @@ export function SetupNotice({ error }: { error: string }) {
           <code>BOLNA_API_KEY</code>.
         </li>
         <li>
-          Run <code>pnpm db:migrate</code>, then <code>pnpm agent:sync</code> and paste the printed <code>BOLNA_AGENT_ID</code>.
+          Run <code>pnpm db:migrate</code>, then <code>pnpm agent:sync</code> and paste the printed{" "}
+          <code>BOLNA_AGENT_ID</code>.
         </li>
         <li>
           Restart <code>pnpm dev</code>.

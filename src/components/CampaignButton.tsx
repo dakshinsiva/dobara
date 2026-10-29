@@ -7,13 +7,26 @@ import type { Cohort } from "@/db/schema";
 import { buttonClass } from "@/components/ui";
 
 /** Dial every eligible customer in a cohort. Guardrails (calling hours) stay on. */
-export function CampaignButton({ cohort, eligible, size = "sm" }: { cohort?: Cohort; eligible: number; size?: "sm" | "md" }) {
+export function CampaignButton({
+  cohort,
+  eligible,
+  size = "sm",
+}: {
+  cohort?: Cohort;
+  eligible: number;
+  size?: "sm" | "md";
+}) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
 
   async function run() {
-    if (!confirm(`Start calls to ${eligible} customer${eligible === 1 ? "" : "s"} now? Calls respect the 10:00–19:00 window.`)) return;
+    if (
+      !confirm(
+        `Start calls to ${eligible} customer${eligible === 1 ? "" : "s"} now? Calls respect the 10:00–19:00 window.`
+      )
+    )
+      return;
     setBusy(true);
     setMsg(null);
     try {
@@ -35,7 +48,12 @@ export function CampaignButton({ cohort, eligible, size = "sm" }: { cohort?: Coh
 
   return (
     <span className="inline-flex items-center gap-2">
-      <button onClick={run} disabled={busy || eligible === 0} className={buttonClass("secondary", size)} title={eligible === 0 ? "No eligible customers" : undefined}>
+      <button
+        onClick={run}
+        disabled={busy || eligible === 0}
+        className={buttonClass("secondary", size)}
+        title={eligible === 0 ? "No eligible customers" : undefined}
+      >
         <Megaphone className="size-3.5" aria-hidden />
         {busy ? "Starting…" : `Call cohort (${eligible})`}
       </button>

@@ -21,7 +21,10 @@ export default function ImportPage() {
           >
             <ImportForm />
           </Card>
-          <Card title="Record reorders" description="Paste the phone numbers of customers who placed a repeat order. Called and control customers are matched alike.">
+          <Card
+            title="Record reorders"
+            description="Paste the phone numbers of customers who placed a repeat order. Called and control customers are matched alike."
+          >
             <ReorderForm />
           </Card>
         </div>
@@ -29,24 +32,39 @@ export default function ImportPage() {
         <aside className="space-y-6 lg:col-span-2">
           <Card title="How the experiment works">
             <ol className="list-decimal space-y-2 pl-5 text-sm leading-6 text-muted">
-              <li>Each phone number is hashed to a stable bucket, so a customer always lands in the same group, even across re-imports.</li>
-              <li>The called group is dialled by cohort inside the 10:00 to 19:00 window. The control group is never called from this app.</li>
-              <li>When the brand records reorders, both groups are matched by phone. The difference in reorder rate is the lift.</li>
+              <li>
+                Each phone number is hashed to a stable bucket, so a customer always lands in the same group, even
+                across re-imports.
+              </li>
+              <li>
+                The called group is dialled by cohort inside the 10:00 to 19:00 window. The control group is never
+                called from this app.
+              </li>
+              <li>
+                When the brand records reorders, both groups are matched by phone. The difference in reorder rate is the
+                lift.
+              </li>
             </ol>
           </Card>
           <Card title="Cohorts">
             <dl className="space-y-3 text-sm">
               <div>
                 <dt className="font-medium">New customer</dt>
-                <dd className="text-muted">First order delivered 4 to 7 days ago. The agent shares one usage tip and listens for early problems.</dd>
+                <dd className="text-muted">
+                  First order delivered 4 to 7 days ago. The agent shares one usage tip and listens for early problems.
+                </dd>
               </div>
               <div>
                 <dt className="font-medium">Running low</dt>
-                <dd className="text-muted">About to run out. The agent asks how many days or scoops are left and offers the reorder link.</dd>
+                <dd className="text-muted">
+                  About to run out. The agent asks how many days or scoops are left and offers the reorder link.
+                </dd>
               </div>
               <div>
                 <dt className="font-medium">Lapsed</dt>
-                <dd className="text-muted">No order for 60 days or more. The agent asks what made them stop and records the reason.</dd>
+                <dd className="text-muted">
+                  No order for 60 days or more. The agent asks what made them stop and records the reason.
+                </dd>
               </div>
             </dl>
           </Card>

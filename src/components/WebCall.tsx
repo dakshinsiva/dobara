@@ -192,7 +192,10 @@ export function WebCall({ personas }: { personas: Persona[] }) {
           <div className="text-lg font-semibold tracking-tight">
             {inCall ? (phase === "active" ? "Talking to Dobara" : "Calling Dobara") : "Talk to Dobara"}
           </div>
-          <p className={["mt-1 max-w-md text-sm", phase === "error" ? "text-danger-fg" : "text-muted"].join(" ")} role="status">
+          <p
+            className={["mt-1 max-w-md text-sm", phase === "error" ? "text-danger-fg" : "text-muted"].join(" ")}
+            role="status"
+          >
             {statusLine[phase]}
           </p>
 
@@ -243,7 +246,9 @@ export function WebCall({ personas }: { personas: Persona[] }) {
       <aside className="space-y-4">
         <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
           <div className="text-xs font-medium uppercase tracking-wider text-faint">Who is Dobara calling?</div>
-          <p className="mt-1 text-xs text-muted">The agent loads this customer&apos;s product, cohort and memory from the last call.</p>
+          <p className="mt-1 text-xs text-muted">
+            The agent loads this customer&apos;s product, cohort and memory from the last call.
+          </p>
           <div className="mt-3 space-y-1.5">
             {personas.map((p) => (
               <label
@@ -300,7 +305,9 @@ export function WebCall({ personas }: { personas: Persona[] }) {
               />
               <span className="min-w-0 flex-1">
                 <span className="font-medium">Guest</span>
-                <span className="block text-xs text-muted">A first-time call to someone running low on plant protein.</span>
+                <span className="block text-xs text-muted">
+                  A first-time call to someone running low on plant protein.
+                </span>
                 {personaId === "guest" && (
                   <input
                     value={guestName}

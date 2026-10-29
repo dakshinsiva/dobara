@@ -38,7 +38,9 @@ export default async function TalkPage() {
         title="Talk to Dobara"
         description="The exact agent that phones customers, over your microphone instead of Plivo. Same prompt, same memory, same extractions; the conversation lands in Calls like any other."
       />
-      {!agentReady && <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so the agent cannot answer yet." />}
+      {!agentReady && (
+        <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so the agent cannot answer yet." />
+      )}
       <WebCall personas={personas} />
     </div>
   );

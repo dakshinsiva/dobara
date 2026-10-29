@@ -32,7 +32,15 @@ export default async function CallsPage() {
       />
       <Card padded={false}>
         {rows.length === 0 ? (
-          <EmptyState icon={PhoneCall} title="No calls yet" action={<LinkButton href="/talk" variant="primary">Talk to Dobara</LinkButton>} />
+          <EmptyState
+            icon={PhoneCall}
+            title="No calls yet"
+            action={
+              <LinkButton href="/talk" variant="primary">
+                Talk to Dobara
+              </LinkButton>
+            }
+          />
         ) : (
           <Table>
             <thead>

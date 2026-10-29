@@ -12,12 +12,12 @@ It is a telecaller who has read the brief once, speaks ten Indian languages, nev
 
 ## 2. How a call works (three parts and a switchboard)
 
-| Part | What it does | Who makes it | What to know |
-| --- | --- | --- | --- |
-| Ears (speech-to-text) | Turns the caller's speech into text, live | Sarvam, Deepgram, ElevenLabs | Sarvam's Hindi word error rate is about 5%, Deepgram's about 13%; southern languages run 14% to 19%. Elderly or dialect speech on a bad line can hit 30% to 40%. |
-| Brain (the language model) | Reads the transcript plus the brief, decides what to say next, fills in fields | OpenAI, Google, Anthropic | It follows instructions well and improvises badly. It knows nothing about your products unless you give it the facts. |
-| Mouth (text-to-speech) | Speaks the reply in a chosen voice | Sarvam, Cartesia, ElevenLabs | Sarvam's newest voices include Hindi-English code-mixed ones. Voices are now good enough that people do not notice for a minute or two. |
-| Switchboard (Bolna) | Dials, listens, decides when the caller has finished speaking, handles interruptions, records, and sends the results to you | Bolna, on Plivo or Exotel phone lines | The whole loop runs in about half a second per turn, which is what makes it feel like a conversation. |
+| Part                       | What it does                                                                                                                | Who makes it                          | What to know                                                                                                                                                     |
+| -------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ears (speech-to-text)      | Turns the caller's speech into text, live                                                                                   | Sarvam, Deepgram, ElevenLabs          | Sarvam's Hindi word error rate is about 5%, Deepgram's about 13%; southern languages run 14% to 19%. Elderly or dialect speech on a bad line can hit 30% to 40%. |
+| Brain (the language model) | Reads the transcript plus the brief, decides what to say next, fills in fields                                              | OpenAI, Google, Anthropic             | It follows instructions well and improvises badly. It knows nothing about your products unless you give it the facts.                                            |
+| Mouth (text-to-speech)     | Speaks the reply in a chosen voice                                                                                          | Sarvam, Cartesia, ElevenLabs          | Sarvam's newest voices include Hindi-English code-mixed ones. Voices are now good enough that people do not notice for a minute or two.                          |
+| Switchboard (Bolna)        | Dials, listens, decides when the caller has finished speaking, handles interruptions, records, and sends the results to you | Bolna, on Plivo or Exotel phone lines | The whole loop runs in about half a second per turn, which is what makes it feel like a conversation.                                                            |
 
 The brain is the only part people talk about. The hard, unglamorous work is in the switchboard: knowing when to speak, stopping when interrupted, hearing names and numbers, and handing the call to a human with context.
 
@@ -57,16 +57,16 @@ The brain is the only part people talk about. The hard, unglamorous work is in t
 
 ## 5. The numbers an operator should keep in his head
 
-| Metric | Figure | Source type |
-| --- | --- | --- |
-| Cost per minute, all-in, list price | about ₹7.8 (6¢ bundled models + 2¢ platform + telephony) | Bolna pricing |
-| Cost per minute at commitment or with own keys | ₹2.5 to ₹4.5 | Bolna pricing, Sarvam rates |
-| Human telecaller, per connected minute | ₹5 to ₹8; ₹6 to ₹10 fully loaded in tier-2, ₹12 to ₹17 in metros | Vendor analysis |
-| Outbound connect rate in India | 46% to 48% | Investor analysis |
-| Average connected outbound call | 1.6 minutes | Investor analysis |
-| Response time per turn | under 0.6 seconds | Bolna claim |
-| Concurrent calls, basic paid account | 10 | Bolna docs |
-| Hindi speech-recognition error rate | 5% (Sarvam) to 13% (Deepgram) | Investor analysis |
+| Metric                                         | Figure                                                           | Source type                 |
+| ---------------------------------------------- | ---------------------------------------------------------------- | --------------------------- |
+| Cost per minute, all-in, list price            | about ₹7.8 (6¢ bundled models + 2¢ platform + telephony)         | Bolna pricing               |
+| Cost per minute at commitment or with own keys | ₹2.5 to ₹4.5                                                     | Bolna pricing, Sarvam rates |
+| Human telecaller, per connected minute         | ₹5 to ₹8; ₹6 to ₹10 fully loaded in tier-2, ₹12 to ₹17 in metros | Vendor analysis             |
+| Outbound connect rate in India                 | 46% to 48%                                                       | Investor analysis           |
+| Average connected outbound call                | 1.6 minutes                                                      | Investor analysis           |
+| Response time per turn                         | under 0.6 seconds                                                | Bolna claim                 |
+| Concurrent calls, basic paid account           | 10                                                               | Bolna docs                  |
+| Hindi speech-recognition error rate            | 5% (Sarvam) to 13% (Deepgram)                                    | Investor analysis           |
 
 ---
 

@@ -18,7 +18,9 @@ const webhookUrl = publicBase
   : undefined;
 
 if (!webhookUrl) {
-  console.warn("PUBLIC_BASE_URL not set: agent will be created without a webhook (use the Refresh button or set it later).");
+  console.warn(
+    "PUBLIC_BASE_URL not set: agent will be created without a webhook (use the Refresh button or set it later)."
+  );
 }
 
 async function api(path, init = {}) {
@@ -35,7 +37,9 @@ async function api(path, init = {}) {
     json = text;
   }
   if (!res.ok) {
-    throw new Error(`${init.method ?? "GET"} ${path} -> ${res.status}: ${typeof json === "string" ? json : JSON.stringify(json)}`);
+    throw new Error(
+      `${init.method ?? "GET"} ${path} -> ${res.status}: ${typeof json === "string" ? json : JSON.stringify(json)}`
+    );
   }
   return json;
 }
@@ -60,7 +64,7 @@ if (agentId) {
 // Extraction category + dispositions (idempotent: skip if the category already has dispositions)
 // The list endpoint returns { categories: [ { id, name, model, dispositions: [...] } ] }
 const listed = await api(`/agent/${agentId}/extraction-categories`);
-const categories = Array.isArray(listed) ? listed : listed?.categories ?? [];
+const categories = Array.isArray(listed) ? listed : (listed?.categories ?? []);
 let category = categories.find((c) => c.name === CATEGORY.name);
 
 if (!category) {

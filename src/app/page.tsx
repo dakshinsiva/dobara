@@ -5,7 +5,20 @@ import { AutoRefresh } from "@/components/AutoRefresh";
 import { CampaignButton } from "@/components/CampaignButton";
 import { ExtractionPill } from "@/components/ExtractionPill";
 import { SetupNotice } from "@/components/SetupNotice";
-import { Badge, Card, EmptyState, KeyValue, LinkButton, PageHeader, Stat, StatusBadge, Table, Td, Th, Tr } from "@/components/ui";
+import {
+  Badge,
+  Card,
+  EmptyState,
+  KeyValue,
+  LinkButton,
+  PageHeader,
+  Stat,
+  StatusBadge,
+  Table,
+  Td,
+  Th,
+  Tr,
+} from "@/components/ui";
 import { COHORTS } from "@/db/schema";
 import { optionalEnv } from "@/lib/env";
 import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
@@ -55,11 +68,17 @@ export default async function OverviewPage() {
         }
       />
 
-      {!agentReady && <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so calls cannot be started yet." />}
+      {!agentReady && (
+        <SetupNotice error="BOLNA_API_KEY or BOLNA_AGENT_ID is missing, so calls cannot be started yet." />
+      )}
 
       <section className="grid grid-cols-2 gap-3 lg:grid-cols-3 xl:grid-cols-6" aria-label="Key figures">
         <Stat label="Customers enrolled" value={t.contacts} hint={`${t.called} called · ${t.control} control`} />
-        <Stat label="Conversations" value={t.conversations} hint={t.conversations ? `${pct(t.reached, t.conversations)} reached the customer` : "No completed calls yet"} />
+        <Stat
+          label="Conversations"
+          value={t.conversations}
+          hint={t.conversations ? `${pct(t.reached, t.conversations)} reached the customer` : "No completed calls yet"}
+        />
         <Stat
           label="Reorder intent"
           value={reorderRate == null ? "—" : `${Math.round(reorderRate)}%`}
@@ -76,7 +95,12 @@ export default async function OverviewPage() {
           }
           tone={lift.points == null ? "muted" : lift.points > 0 ? "good" : "warning"}
         />
-        <Stat label="Open actions" value={t.openActions} hint={t.redFlags ? `${t.redFlags} red flag${t.redFlags === 1 ? "" : "s"}` : "Follow-ups for the team"} tone={t.openActions ? "warning" : "neutral"} />
+        <Stat
+          label="Open actions"
+          value={t.openActions}
+          hint={t.redFlags ? `${t.redFlags} red flag${t.redFlags === 1 ? "" : "s"}` : "Follow-ups for the team"}
+          tone={t.openActions ? "warning" : "neutral"}
+        />
         <Stat
           label="Cost per conversation"
           value={perConversation == null ? "—" : fmtInrFromCents(perConversation)}
@@ -90,14 +114,21 @@ export default async function OverviewPage() {
           title="Action queue"
           description="What the agent heard that a person must act on."
           action={
-            <Link href="/actions" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+            <Link
+              href="/actions"
+              className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+            >
               All actions <ChevronRight className="size-3.5" aria-hidden />
             </Link>
           }
           padded={false}
         >
           {data.openActions.length === 0 ? (
-            <EmptyState icon={Inbox} title="Nothing waiting" description="Follow-ups appear here as soon as a call finishes: WhatsApp links to send, callbacks, red flags." />
+            <EmptyState
+              icon={Inbox}
+              title="Nothing waiting"
+              description="Follow-ups appear here as soon as a call finishes: WhatsApp links to send, callbacks, red flags."
+            />
           ) : (
             <ul className="divide-y divide-line px-5">
               {data.openActions.slice(0, 6).map(({ action, contact }) => (
@@ -106,7 +137,11 @@ export default async function OverviewPage() {
                   action={action}
                   contact={contact}
                   compact
-                  whatsappHref={action.type === "send_link" && contact ? whatsappLink(contact.phone, reorderMessage(contact)) : undefined}
+                  whatsappHref={
+                    action.type === "send_link" && contact
+                      ? whatsappLink(contact.phone, reorderMessage(contact))
+                      : undefined
+                  }
                 />
               ))}
             </ul>
@@ -139,7 +174,10 @@ export default async function OverviewPage() {
           <Card
             title="Agent"
             action={
-              <Link href="/agent" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+              <Link
+                href="/agent"
+                className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+              >
                 Configure <ChevronRight className="size-3.5" aria-hidden />
               </Link>
             }
@@ -180,7 +218,10 @@ export default async function OverviewPage() {
       <Card
         title="Recent calls"
         action={
-          <Link href="/calls" className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline">
+          <Link
+            href="/calls"
+            className="inline-flex items-center gap-1 text-xs font-medium text-accent hover:underline"
+          >
             All calls <ChevronRight className="size-3.5" aria-hidden />
           </Link>
         }
@@ -191,7 +232,11 @@ export default async function OverviewPage() {
             icon={Mic}
             title="No calls yet"
             description="Press Call now on a customer, or talk to Dobara in the browser to see a conversation end to end."
-            action={<LinkButton href="/talk" variant="primary">Talk to Dobara</LinkButton>}
+            action={
+              <LinkButton href="/talk" variant="primary">
+                Talk to Dobara
+              </LinkButton>
+            }
           />
         ) : (
           <Table>

@@ -180,11 +180,9 @@ export const bolna = {
 
   getAgent: (agentId: string) => request<Record<string, unknown>>(`/v2/agent/${agentId}`),
 
-  startCall: (body: StartCallBody) =>
-    request<StartCallResponse>("/call", { method: "POST", body }),
+  startCall: (body: StartCallBody) => request<StartCallResponse>("/call", { method: "POST", body }),
 
-  getExecution: (executionId: string) =>
-    request<ExecutionPayload>(`/executions/${executionId}`),
+  getExecution: (executionId: string) => request<ExecutionPayload>(`/executions/${executionId}`),
 
   /** Mint a browser (WebRTC) call session. The API key stays on the server; the browser gets SIP creds. */
   createWebCallSession: async (body: WebCallSessionBody) => {
@@ -200,15 +198,13 @@ export const bolna = {
   },
 
   listExtractionCategories: (agentId: string) =>
-    request<Array<{ id: string; name: string; model: string }>>(
-      `/agent/${agentId}/extraction-categories`
-    ),
+    request<Array<{ id: string; name: string; model: string }>>(`/agent/${agentId}/extraction-categories`),
 
   createExtractionCategory: (agentId: string, body: { name: string; model: string }) =>
-    request<{ id: string; name: string; model: string }>(
-      `/agent/${agentId}/extraction-categories`,
-      { method: "POST", body }
-    ),
+    request<{ id: string; name: string; model: string }>(`/agent/${agentId}/extraction-categories`, {
+      method: "POST",
+      body,
+    }),
 
   bulkCreateDispositions: (body: { agent_id: string; dispositions: DispositionItem[] }) =>
     request<{ message: string; ids: string[] }>("/dispositions/bulk", {
@@ -227,8 +223,7 @@ export const bolna = {
 
 /** Pull a flat view of extracted_data: { "Category/Name": { objective, subjective, confidence } } */
 export function flattenExtracted(extracted: ExtractedData | null | undefined) {
-  const out: Record<string, { objective: string | null; subjective: string | null; confidence: number | null }> =
-    {};
+  const out: Record<string, { objective: string | null; subjective: string | null; confidence: number | null }> = {};
   if (!extracted) return out;
   for (const [category, items] of Object.entries(extracted)) {
     for (const [name, r] of Object.entries(items ?? {})) {

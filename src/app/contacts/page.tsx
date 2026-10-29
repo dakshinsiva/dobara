@@ -69,7 +69,9 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
   );
   const eligible = eligibleForCampaign(rows, calls, cohort);
   const lastCallByContact = new Map<string, Date>();
-  for (const r of calls) if (r.call.contactId && !lastCallByContact.has(r.call.contactId)) lastCallByContact.set(r.call.contactId, r.call.createdAt);
+  for (const r of calls)
+    if (r.call.contactId && !lastCallByContact.has(r.call.contactId))
+      lastCallByContact.set(r.call.contactId, r.call.createdAt);
 
   return (
     <div className="space-y-6">
@@ -134,8 +136,18 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
           <EmptyState
             icon={Users}
             title={all.length === 0 ? "No customers yet" : "No customers match these filters"}
-            description={all.length === 0 ? "Import a CSV from the brand's order export. Start with your own number to hear the agent." : undefined}
-            action={all.length === 0 ? <LinkButton href="/import" variant="primary">Import customers</LinkButton> : undefined}
+            description={
+              all.length === 0
+                ? "Import a CSV from the brand's order export. Start with your own number to hear the agent."
+                : undefined
+            }
+            action={
+              all.length === 0 ? (
+                <LinkButton href="/import" variant="primary">
+                  Import customers
+                </LinkButton>
+              ) : undefined
+            }
           />
         ) : (
           <Table>
@@ -174,7 +186,10 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
                       <Badge tone={c.group === "called" ? "info" : "muted"}>{GROUP_LABEL[c.group]}</Badge>
                     </Td>
                     <Td className="text-muted">{LANGUAGE_LABEL[c.language]}</Td>
-                    <Td className="max-w-[14rem] truncate text-muted" title={[c.product, c.flavour].filter(Boolean).join(" · ")}>
+                    <Td
+                      className="max-w-[14rem] truncate text-muted"
+                      title={[c.product, c.flavour].filter(Boolean).join(" · ")}
+                    >
                       {[c.product, c.flavour].filter(Boolean).join(" · ") || "—"}
                     </Td>
                     <Td align="right" className="whitespace-nowrap text-muted tnum">
@@ -202,7 +217,13 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
                       <CallButton
                         contactId={c.id}
                         disabled={!agentReady || c.group === "control" || Boolean(c.doNotCall)}
-                        reason={c.group === "control" ? "Control group is never called" : c.doNotCall ? "Customer opted out" : undefined}
+                        reason={
+                          c.group === "control"
+                            ? "Control group is never called"
+                            : c.doNotCall
+                              ? "Customer opted out"
+                              : undefined
+                        }
                       />
                     </Td>
                   </Tr>

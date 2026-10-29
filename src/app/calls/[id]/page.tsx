@@ -41,7 +41,8 @@ export default async function CallPage(props: { params: Promise<{ id: string }> 
   const ex = call.extracted?.[CATEGORY.name] ?? {};
   const obj = (name: string) => ex[name]?.objective ?? null;
   const text = (name: string) => (ex[name]?.subjective?.trim() ? ex[name].subjective : null);
-  const memoryBefore = (raw.context_details?.recipient_data?.last_summary as string | undefined) ?? contact?.lastSummary;
+  const memoryBefore =
+    (raw.context_details?.recipient_data?.last_summary as string | undefined) ?? contact?.lastSummary;
   const memoryAfter = text(D.nextCallSummary);
   const cost = raw.cost_breakdown;
   const tel = raw.telephony_data ?? {};
@@ -67,7 +68,8 @@ export default async function CallPage(props: { params: Promise<{ id: string }> 
             <span>{fmtDuration(call.conversationDuration)}</span>
             {call.totalCostCents != null && (
               <span>
-                {fmtInrFromCents(call.totalCostCents)} <span className="text-faint">({fmtUsdCents(call.totalCostCents)})</span>
+                {fmtInrFromCents(call.totalCostCents)}{" "}
+                <span className="text-faint">({fmtUsdCents(call.totalCostCents)})</span>
               </span>
             )}
             {call.hangupReason && <span className="text-faint">{call.hangupReason}</span>}
@@ -146,11 +148,19 @@ export default async function CallPage(props: { params: Promise<{ id: string }> 
           <div className="space-y-4 text-sm">
             <div>
               <div className="text-xs text-muted">Before this call</div>
-              <p className="mt-0.5 leading-6">{memoryBefore && memoryBefore !== "This is the first call." ? memoryBefore : <span className="text-faint">First conversation. Nothing to remember yet.</span>}</p>
+              <p className="mt-0.5 leading-6">
+                {memoryBefore && memoryBefore !== "This is the first call." ? (
+                  memoryBefore
+                ) : (
+                  <span className="text-faint">First conversation. Nothing to remember yet.</span>
+                )}
+              </p>
             </div>
             <div>
               <div className="text-xs text-muted">Saved for the next call</div>
-              <p className="mt-0.5 leading-6">{memoryAfter ?? <span className="text-faint">Written when the call completes.</span>}</p>
+              <p className="mt-0.5 leading-6">
+                {memoryAfter ?? <span className="text-faint">Written when the call completes.</span>}
+              </p>
             </div>
           </div>
         </Card>
@@ -172,7 +182,9 @@ export default async function CallPage(props: { params: Promise<{ id: string }> 
                 action={a}
                 contact={contact}
                 compact
-                whatsappHref={a.type === "send_link" && contact ? whatsappLink(contact.phone, reorderMessage(contact)) : undefined}
+                whatsappHref={
+                  a.type === "send_link" && contact ? whatsappLink(contact.phone, reorderMessage(contact)) : undefined
+                }
               />
             ))}
           </ul>
@@ -196,14 +208,21 @@ export default async function CallPage(props: { params: Promise<{ id: string }> 
             {tel.from_number ? <KeyValue label="From">{fmtPhone(String(tel.from_number))}</KeyValue> : null}
             {tel.ring_duration != null ? <KeyValue label="Ring time">{String(tel.ring_duration)} s</KeyValue> : null}
             {tel.hangup_by ? <KeyValue label="Hung up by">{String(tel.hangup_by)}</KeyValue> : null}
-            {usage.transcriber_model ? <KeyValue label="Speech to text">{String(usage.transcriber_model)}</KeyValue> : null}
-            {usage.synthesizer_model ? <KeyValue label="Voice">{`${String(usage.voice_id ?? "")} · ${String(usage.synthesizer_model)}`}</KeyValue> : null}
-            {usage.llmModel ? <KeyValue label="Model">{Object.keys(usage.llmModel as Record<string, unknown>).join(", ")}</KeyValue> : null}
+            {usage.transcriber_model ? (
+              <KeyValue label="Speech to text">{String(usage.transcriber_model)}</KeyValue>
+            ) : null}
+            {usage.synthesizer_model ? (
+              <KeyValue label="Voice">{`${String(usage.voice_id ?? "")} · ${String(usage.synthesizer_model)}`}</KeyValue>
+            ) : null}
+            {usage.llmModel ? (
+              <KeyValue label="Model">{Object.keys(usage.llmModel as Record<string, unknown>).join(", ")}</KeyValue>
+            ) : null}
             {cost && (
               <KeyValue label="Cost split">
                 <span className="text-xs text-muted tnum">
-                  speech {fmtUsdCents((cost.synthesizer ?? 0) + (cost.transcriber ?? 0))} · model {fmtUsdCents(cost.llm ?? 0)} · telephony{" "}
-                  {fmtUsdCents(cost.network ?? 0)} · platform {fmtUsdCents(cost.platform ?? 0)}
+                  speech {fmtUsdCents((cost.synthesizer ?? 0) + (cost.transcriber ?? 0))} · model{" "}
+                  {fmtUsdCents(cost.llm ?? 0)} · telephony {fmtUsdCents(cost.network ?? 0)} · platform{" "}
+                  {fmtUsdCents(cost.platform ?? 0)}
                 </span>
               </KeyValue>
             )}

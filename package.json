@@ -2,13 +2,21 @@
   "name": "dobara",
   "version": "0.1.0",
   "private": true,
+  "description": "The retention agent for consumer brands: voice check-ins on Bolna and Plivo that bring customers back.",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@9.15.4",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
+    "db:reset": "node --env-file=.env.local scripts/reset-db.mjs",
     "agent:sync": "node --env-file=.env.local scripts/sync-agent.mjs",
     "bolna:me": "node --env-file=.env.local scripts/whoami.mjs"
   },
@@ -31,8 +39,8 @@
     "@types/react-dom": "^19",
     "eslint": "^9",
     "eslint-config-next": "16.4.3",
+    "prettier": "3",
     "tailwindcss": "^4",
     "typescript": "^5"
-  },
-  "packageManager": "pnpm@9.15.4"
+  }
 }

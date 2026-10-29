@@ -37,10 +37,16 @@ export function ActionItem({ action, contact, whatsappHref, compact }: ActionIte
   }
 
   const detail =
-    action.type === "red_flag" ? humanize(action.detail) : action.detail && action.detail.length > 2 ? action.detail : null;
+    action.type === "red_flag"
+      ? humanize(action.detail)
+      : action.detail && action.detail.length > 2
+        ? action.detail
+        : null;
 
   return (
-    <li className={["flex flex-wrap items-center gap-x-4 gap-y-2 py-3", done && "opacity-60"].filter(Boolean).join(" ")}>
+    <li
+      className={["flex flex-wrap items-center gap-x-4 gap-y-2 py-3", done && "opacity-60"].filter(Boolean).join(" ")}
+    >
       <div className="min-w-0 flex-1">
         <div className="flex flex-wrap items-center gap-2">
           <Badge tone={ACTION_TONE[action.type]} dot>
@@ -60,7 +66,13 @@ export function ActionItem({ action, contact, whatsappHref, compact }: ActionIte
           </Link>
         )}
         {whatsappHref && !done && (
-          <a href={whatsappHref} target="_blank" rel="noreferrer" className={buttonClass("secondary", "sm")} title="Open WhatsApp with the message ready">
+          <a
+            href={whatsappHref}
+            target="_blank"
+            rel="noreferrer"
+            className={buttonClass("secondary", "sm")}
+            title="Open WhatsApp with the message ready"
+          >
             <MessageCircle className="size-3.5" aria-hidden />
             WhatsApp
           </a>
