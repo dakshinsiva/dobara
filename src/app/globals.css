@@ -2,7 +2,8 @@
 
 /*
  * Design tokens. Light is the primary theme (brand teams work in daylight on
- * laptops); dark values are chosen per token, not inverted.
+ * laptops); dark values are chosen per token, not inverted. The OS preference
+ * applies unless the viewer picked a theme (data-theme on <html>, from a cookie).
  */
 :root {
   color-scheme: light;
@@ -34,7 +35,7 @@
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     color-scheme: dark;
     --canvas: #121413;
     --surface: #1a1d1c;
@@ -62,6 +63,35 @@
     --info-fg: #9cc0f4;
     --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
   }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --canvas: #121413;
+  --surface: #1a1d1c;
+  --surface-2: #222624;
+  --line: #2c312e;
+  --line-strong: #3a403c;
+  --fg: #eef0ee;
+  --muted: #a3aba6;
+  --faint: #7b837e;
+  --accent: #2bb3a3;
+  --accent-hover: #4cc8b9;
+  --accent-soft: #163b37;
+  --accent-fg: #06201d;
+  --good: #3fbf3f;
+  --good-bg: #163a16;
+  --good-fg: #9be49b;
+  --warning: #fab219;
+  --warning-bg: #3f2e08;
+  --warning-fg: #f5c454;
+  --danger: #e66767;
+  --danger-bg: #3f1515;
+  --danger-fg: #f3a0a0;
+  --info: #3987e5;
+  --info-bg: #152a4a;
+  --info-fg: #9cc0f4;
+  --shadow: 0 1px 2px rgb(0 0 0 / 0.4);
 }
 
 @theme inline {

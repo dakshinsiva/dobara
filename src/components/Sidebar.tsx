@@ -7,6 +7,8 @@ import {
   LayoutDashboard,
   ListChecks,
   Mic,
+  Moon,
+  Sun,
   PhoneCall,
   Settings2,
   Store,
@@ -17,8 +19,17 @@ import {
 
 type Item = { href: string; label: string; icon: LucideIcon; badge?: number; accent?: boolean };
 
-export function Sidebar({ brand, openActions }: { brand: string; openActions: number }) {
+export function Sidebar({
+  brand,
+  openActions,
+  theme,
+}: {
+  brand: string;
+  openActions: number;
+  theme: "light" | "dark" | "system";
+}) {
   const pathname = usePathname();
+  const nextTheme = theme === "dark" ? "light" : "dark";
 
   const primary: Item[] = [
     { href: "/", label: "Overview", icon: LayoutDashboard },
@@ -91,10 +102,20 @@ export function Sidebar({ brand, openActions }: { brand: string; openActions: nu
         <div className="flex gap-1 md:hidden">{secondary.map(renderItem)}</div>
       </nav>
 
-      <div className="hidden px-5 pt-6 text-xs leading-5 text-faint md:absolute md:bottom-5 md:block">
-        Voice by Bolna · Calls on Plivo
-        <br />
-        Speech by Sarvam
+      <div className="hidden px-5 pt-6 md:absolute md:bottom-5 md:block">
+        <a
+          href={`/api/theme?set=${nextTheme}&back=${encodeURIComponent(pathname)}`}
+          className="mb-3 inline-flex items-center gap-2 rounded-lg px-2 py-1 text-xs text-muted hover:bg-surface-2 hover:text-fg"
+          title="Switch theme"
+        >
+          {theme === "dark" ? <Sun className="size-3.5" aria-hidden /> : <Moon className="size-3.5" aria-hidden />}
+          {theme === "dark" ? "Light mode" : "Dark mode"}
+        </a>
+        <div className="text-xs leading-5 text-faint">
+          Voice by Bolna · Calls on Plivo
+          <br />
+          Speech by Sarvam
+        </div>
       </div>
     </aside>
   );

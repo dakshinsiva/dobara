@@ -6,6 +6,8 @@ const nextConfig: NextConfig = {
   // components off so that segment config is honoured.
   // PGlite ships a WASM binary; keep it out of the server bundle.
   serverExternalPackages: ["@electric-sql/pglite"],
+  // No floating dev badge: demos and screen recordings run against `next dev`.
+  devIndicators: false,
   turbopack: {
     rules: {
       "*.css": {

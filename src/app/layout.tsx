@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { cookies } from "next/headers";
 import { Sidebar } from "@/components/Sidebar";
 import { optionalEnv } from "@/lib/env";
 import { getOpenActionCount } from "@/lib/nav";
@@ -15,13 +16,15 @@ export const metadata: Metadata = {
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   const brand = optionalEnv("BRAND_NAME", "Cosmix");
-  const openActions = await getOpenActionCount();
+  const [openActions, cookieStore] = await Promise.all([getOpenActionCount(), cookies()]);
+  const theme = cookieStore.get("theme")?.value;
+  const dataTheme = theme === "light" || theme === "dark" ? theme : undefined;
 
   return (
-    <html lang="en" className={`${sans.variable} ${mono.variable}`}>
+    <html lang="en" className={`${sans.variable} ${mono.variable}`} data-theme={dataTheme}>
       <body className="min-h-screen bg-canvas text-fg">
         <div className="min-h-screen md:grid md:grid-cols-[232px_minmax(0,1fr)]">
-          <Sidebar brand={brand} openActions={openActions} />
+          <Sidebar brand={brand} openActions={openActions} theme={dataTheme ?? "system"} />
           <div className="min-w-0">
             <main className="mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">{children}</main>
           </div>
