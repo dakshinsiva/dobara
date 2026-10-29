@@ -46,7 +46,13 @@ pnpm agent:sync                   # creates the agent + extraction fields on Bol
 pnpm dev                          # http://localhost:3000
 ```
 
-Then follow the **Getting started** checklist on the Overview: load the sample store with one click on **Connect store** (or paste a real Shopify token), add a number you can answer under **Import data → Add a test customer**, press **Call now** on **Customers** or open **Talk to Dobara** and speak to it in the browser, clear the follow-up it creates, and record a reorder to see the lift.
+Then follow the **Getting started** checklist on the Overview, in order:
+
+1. **Connect your store.** Paste a Shopify token on Connect store, or load the sample store with one click.
+2. **Add your number.** Import data → Add a test customer, so the first call comes to you.
+3. **Hear the agent.** Call now on your row under Customers, or Talk to Dobara in the browser.
+4. **Clear the follow-up.** Actions → WhatsApp sends the link the agent promised.
+5. **Measure the lift.** Record a reorder on Import data; the store sync detects them on its own.
 
 ### Shopify
 

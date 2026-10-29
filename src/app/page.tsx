@@ -48,32 +48,32 @@ export default async function OverviewPage() {
   const lift = h.lift;
   const steps: Step[] = [
     {
-      title: "Bring in customers",
-      detail: storeConnected ? "Store connected" : "Connect Shopify or load the sample store",
+      title: "Connect your store",
+      detail: storeConnected ? "Connected" : "Paste a Shopify token, or load the sample store",
       href: "/connect",
       done: storeConnected || h.base > 0,
     },
     {
-      title: "Add a number you can answer",
-      detail: "So you can hear the agent yourself",
+      title: "Add your number",
+      detail: "So the first call comes to you",
       href: "/import",
       done: h.onboarding.csvContacts > 0,
     },
     {
-      title: "Hear a conversation",
-      detail: "Call now on Customers, or talk in the browser",
+      title: "Hear the agent",
+      detail: "Call now on your row, or talk in the browser",
       href: h.onboarding.csvContacts > 0 ? "/contacts?cohort=running_low" : "/talk",
       done: h.conversations > 0,
     },
     {
-      title: "Clear a follow-up",
-      detail: "Send the WhatsApp link the agent promised",
+      title: "Clear the follow-up",
+      detail: "Send the WhatsApp link it promised",
       href: "/actions",
       done: h.onboarding.doneActions > 0,
     },
     {
-      title: "Record a reorder",
-      detail: "From the store sync or the Import page; this fills the lift",
+      title: "Measure the lift",
+      detail: "Record a reorder; the store sync does this too",
       href: "/import",
       done: h.onboarding.anyReordered,
     },

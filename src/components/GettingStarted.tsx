@@ -12,7 +12,10 @@ export function GettingStarted({ steps }: { steps: Step[] }) {
   return (
     <section className="rounded-xl border border-accent/40 bg-accent-soft/40 p-5" aria-label="Getting started">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="text-sm font-semibold">Getting started</h2>
+        <div>
+          <h2 className="text-sm font-semibold">Getting started</h2>
+          <p className="text-xs text-muted">Five steps, in order, from a blank workspace to a measured lift.</p>
+        </div>
         <span className="text-xs text-muted">
           {steps.length - remaining} of {steps.length} done
         </span>
