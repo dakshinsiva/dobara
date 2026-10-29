@@ -7,7 +7,7 @@ import { SetupNotice } from "@/components/SetupNotice";
 import { Card, EmptyState, LinkButton, PageHeader, StatusBadge, Table, Td, Th, Tr } from "@/components/ui";
 import { recentCalls } from "@/lib/calls";
 import { fmtDateTime, fmtDuration, fmtInrFromCents } from "@/lib/format";
-import { statusInfo } from "@/lib/labels";
+import { isLive } from "@/lib/labels";
 import { CATEGORY, D } from "../../../bolna/dispositions.mjs";
 
 export const dynamic = "force-dynamic";
@@ -20,7 +20,7 @@ export default async function CallsPage() {
   } catch (e) {
     return <SetupNotice error={e instanceof Error ? e.message : String(e)} />;
   }
-  const liveIds = rows.filter((r) => statusInfo(r.call.status).live).map((r) => r.call.id);
+  const liveIds = rows.filter((r) => isLive(r.call)).map((r) => r.call.id);
 
   return (
     <div className="space-y-6">

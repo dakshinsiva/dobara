@@ -10,7 +10,7 @@ import { Transcript } from "@/components/Transcript";
 import { Badge, Card, KeyValue, PageHeader, StatusBadge } from "@/components/ui";
 import { getDb, schema } from "@/db";
 import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtPhone, fmtUsdCents } from "@/lib/format";
-import { EXTRACTION_LABEL, statusInfo } from "@/lib/labels";
+import { EXTRACTION_LABEL, isLive } from "@/lib/labels";
 import { reorderMessage, whatsappLink } from "@/lib/whatsapp";
 import { CATEGORY, D } from "../../../../bolna/dispositions.mjs";
 
@@ -46,7 +46,7 @@ export default async function CallPage(props: { params: Promise<{ id: string }> 
   const cost = raw.cost_breakdown;
   const tel = raw.telephony_data ?? {};
   const usage = raw.usage_breakdown ?? {};
-  const live = statusInfo(call.status).live;
+  const live = isLive(call);
 
   const outcomeFields = [D.reached, D.reorderIntent, D.sendLink, D.callback, D.redFlag];
   const productFields = [D.usage, D.stock, D.satisfaction, D.issue];

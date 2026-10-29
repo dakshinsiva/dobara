@@ -10,7 +10,7 @@ import { COHORTS } from "@/db/schema";
 import { optionalEnv } from "@/lib/env";
 import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtUsdCents, pct } from "@/lib/format";
 import { eligibleForCampaign, getOverview, type Overview } from "@/lib/insights";
-import { COHORT_HINT, COHORT_LABEL, statusInfo } from "@/lib/labels";
+import { COHORT_HINT, COHORT_LABEL, isLive } from "@/lib/labels";
 import { reorderMessage, whatsappLink } from "@/lib/whatsapp";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
 import { LANGUAGES } from "../../bolna/agent.config.mjs";
@@ -29,7 +29,7 @@ export default async function OverviewPage() {
   const agentReady = Boolean(process.env.BOLNA_AGENT_ID && process.env.BOLNA_API_KEY);
   const webhookReady = Boolean(process.env.PUBLIC_BASE_URL);
   const t = data.totals;
-  const liveIds = data.calls.filter((r) => statusInfo(r.call.status).live).map((r) => r.call.id);
+  const liveIds = data.calls.filter((r) => isLive(r.call)).map((r) => r.call.id);
   const reorderRate = t.conversations ? (t.reorderYes / t.conversations) * 100 : null;
   const perConversation = t.conversations ? t.costCents / t.conversations : null;
   const lift = data.lift;

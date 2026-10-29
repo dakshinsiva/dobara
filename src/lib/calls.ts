@@ -5,7 +5,7 @@
 import { and, desc, eq, gt, notExists, notInArray } from "drizzle-orm";
 import { getDb, schema } from "@/db";
 import type { ActionType, Call, Cohort, Contact, ExtractedData, NewAction } from "@/db/schema";
-import { bolna, TERMINAL_STATUSES, type ExecutionPayload, type WebCallSession } from "./bolna";
+import { bolna, BolnaError, TERMINAL_STATUSES, type ExecutionPayload, type WebCallSession } from "./bolna";
 import { optionalEnv, requireEnv } from "./env";
 import { daysSince } from "./format";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
@@ -258,8 +258,31 @@ export async function refreshCall(callId: string): Promise<Call | null> {
   const db = getDb();
   const [call] = await db.select().from(calls).where(eq(calls.id, callId)).limit(1);
   if (!call?.executionId) return null;
-  const payload = await bolna.getExecution(call.executionId);
+  const ageMs = Date.now() - new Date(call.createdAt).getTime();
+  const abandoned = call.channel === "web" && !isTerminal(call.status) && ageMs > 5 * 60_000;
+
+  let payload: ExecutionPayload;
+  try {
+    payload = await bolna.getExecution(call.executionId);
+  } catch (err) {
+    if (err instanceof BolnaError && err.status === 404 && abandoned) return retireWebSession(call.id);
+    throw err;
+  }
+  // Bolna keeps a minted-but-never-connected browser session "in-progress" with zero duration.
+  if (abandoned && !isTerminal(String(payload.status)) && !(payload.conversation_duration ?? 0)) {
+    return retireWebSession(call.id);
+  }
   return applyExecution(payload);
+}
+
+async function retireWebSession(callId: string): Promise<Call> {
+  const db = getDb();
+  const [retired] = await db
+    .update(calls)
+    .set({ status: "canceled", hangupReason: "Browser session never connected", updatedAt: new Date() })
+    .where(eq(calls.id, callId))
+    .returning();
+  return retired;
 }
 
 export async function refreshByExecutionId(executionId: string): Promise<Call | null> {

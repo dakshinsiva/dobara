@@ -63,7 +63,7 @@ export function Sidebar({ brand, openActions }: { brand: string; openActions: nu
   };
 
   return (
-    <aside className="border-b border-line bg-surface md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r">
+    <aside className="border-b border-line bg-surface md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r md:relative">
       <div className="flex items-center gap-3 px-4 py-4 md:px-5">
         <Link href="/" className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-lg bg-accent text-accent-fg">

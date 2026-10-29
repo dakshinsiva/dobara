@@ -153,3 +153,8 @@ const STATUS: Record<string, StatusInfo> = {
 export function statusInfo(status: string): StatusInfo {
   return STATUS[status] ?? { label: humanize(status), tone: "neutral", live: false };
 }
+
+/** Still worth polling: a live status that Bolna touched in the last 20 minutes. */
+export function isLive(call: { status: string; updatedAt: Date | string }): boolean {
+  return statusInfo(call.status).live && Date.now() - new Date(call.updatedAt).getTime() < 20 * 60_000;
+}
