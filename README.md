@@ -81,6 +81,29 @@ Bolna's webhook source IPs are 13.203.39.153, 13.126.9.249 and 13.202.133.53 if 
 
 Imports and store syncs split phone numbers into **called** and **control** by a stable hash (default 70/30). Control customers can never be dialled from the app. Reorders are detected automatically on each store sync (a newer order than the one on file) or recorded by hand (Import data → Record reorders); both groups are matched the same way and the Insights page reports the difference in reorder rate as lift. Re-imports never move a customer between groups.
 
+## Deploying
+
+The production instance runs on Vercel with Neon Postgres from the Vercel Marketplace.
+
+```bash
+vercel link --project dobara
+vercel integration add neon --name dobara-db --meta region=sin1 --meta auth=false --no-claim   # provisions Neon, sets DATABASE_URL
+vercel env pull .env.vercel --environment=production --yes
+node --env-file=.env.vercel scripts/migrate.mjs                                               # creates the tables on Neon
+vercel env add BOLNA_API_KEY production   # and BOLNA_AGENT_ID, WEBHOOK_SECRET, INTEGRATION_SECRET, CRON_SECRET, DEMO_PASSWORD,
+                                          # PUBLIC_BASE_URL, BRAND_NAME, OFFER_TEXT, REORDER_URL, DEFAULT_COUNTRY_CODE, INR_PER_USD
+vercel deploy --prod
+PUBLIC_BASE_URL=https://<your-domain> pnpm agent:sync                                           # points the Bolna webhook at production
+DEMO_PASSWORD=... pnpm demo:seed -- --url https://<your-domain> --contacts "Name,phone,en;Name,phone,ta"
+```
+
+Notes:
+
+- `DEMO_PASSWORD` turns on the password gate (`src/proxy.ts`). Every page and API asks for it once per browser; webhooks, cron and the sample store stay open because they carry their own secrets.
+- Vercel's own Deployment Protection stays on for preview URLs. Attach a production domain (any `*.vercel.app` name you own works) so brands and Bolna's webhook reach the app without a Vercel account.
+- `vercel.json` pins functions to `sin1`, next to the database, and schedules the daily store sync.
+- The webhook URL lives on the Bolna agent, so one environment receives webhooks at a time. Local development falls back to polling and the Refresh button.
+
 ## Scripts
 
 | Script                                         | What it does                                                                     |

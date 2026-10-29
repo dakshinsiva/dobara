@@ -18,7 +18,8 @@
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
     "db:reset": "node --env-file=.env.local scripts/reset-db.mjs",
     "agent:sync": "node --env-file=.env.local scripts/sync-agent.mjs",
-    "bolna:me": "node --env-file=.env.local scripts/whoami.mjs"
+    "bolna:me": "node --env-file=.env.local scripts/whoami.mjs",
+    "demo:seed": "node scripts/seed-demo.mjs"
   },
   "dependencies": {
     "@bolna/web-call": "3.0.1",
