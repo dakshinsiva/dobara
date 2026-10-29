@@ -390,3 +390,135 @@ export function eligibleForCampaign(contactRows: Contact[], callRows: CallWithCo
       !recent.has(c.id)
   );
 }
+
+/* ---------- Retention health (the Overview) ---------- */
+
+export interface ProductHealth {
+  product: string;
+  customers: number;
+  repeatRate: number | null;
+  runningLow: number;
+  lapsed: number;
+  happyShare: number | null;
+  topIssue: string | null;
+}
+
+export interface RetentionHealth {
+  base: number;
+  /** Customers with more than one order, over customers with any order. */
+  repeatRate: number | null;
+  repeaters: number;
+  /** Median days between orders for customers who bought more than once. */
+  medianDaysBetweenOrders: number | null;
+  lifecycle: Record<Cohort, number>;
+  atRiskThisWeek: number;
+  revenueAtRisk: number | null;
+  reorderValueInr: number | null;
+  issues: Bucket[];
+  byProduct: ProductHealth[];
+  funnel: FunnelStage[];
+  lift: Lift;
+  conversations: number;
+  reachRate: number | null;
+  openActions: number;
+  redFlags: number;
+  latest: CallWithContact | null;
+}
+
+function median(values: number[]): number | null {
+  if (!values.length) return null;
+  const s = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(s.length / 2);
+  return s.length % 2 ? s[mid] : Math.round((s[mid - 1] + s[mid]) / 2);
+}
+
+export async function getRetentionHealth(): Promise<RetentionHealth> {
+  const db = getDb();
+  const [contactRows, callRows, allActions] = await Promise.all([
+    db.select().from(contacts).orderBy(desc(contacts.createdAt)).limit(2000),
+    db
+      .select({ call: calls, contact: contacts })
+      .from(calls)
+      .leftJoin(contacts, eq(calls.contactId, contacts.id))
+      .orderBy(desc(calls.createdAt))
+      .limit(1000),
+    listActions("all", 2000),
+  ]);
+
+  const orders = (c: Contact) => Math.max(c.orderCount, c.lastOrderAt ? 1 : 0);
+  const withOrders = contactRows.filter((c) => orders(c) >= 1);
+  const repeaters = withOrders.filter((c) => orders(c) >= 2);
+  const intervals = repeaters
+    .filter((c) => c.firstOrderAt && c.lastOrderAt && c.firstOrderAt !== c.lastOrderAt)
+    .map((c) => {
+      const span = (new Date(c.lastOrderAt!).getTime() - new Date(c.firstOrderAt!).getTime()) / 86_400_000;
+      return Math.round(span / (orders(c) - 1));
+    })
+    .filter((d) => d > 0);
+
+  const lifecycle = Object.fromEntries(
+    COHORTS.map((k) => [k, contactRows.filter((c) => c.cohort === k).length])
+  ) as Record<Cohort, number>;
+  const atRiskThisWeek = lifecycle.running_low;
+  const valueInr = Number(process.env.REORDER_VALUE_INR);
+  const reorderValueInr = Number.isFinite(valueInr) && valueInr > 0 ? valueInr : null;
+
+  const convs = callRows.filter((r) => isConversation(r.call));
+  const callsOnly = convs.map((r) => r.call);
+  const issues = distribution(callsOnly, D.issue).filter((b) => b.value !== "none" && b.value !== "unknown");
+
+  const products = new Map<string, Contact[]>();
+  for (const c of contactRows) {
+    const key = c.product ?? "Unknown product";
+    if (!products.has(key)) products.set(key, []);
+    products.get(key)!.push(c);
+  }
+  const byProduct: ProductHealth[] = [...products.entries()]
+    .map(([product, rows]) => {
+      const ids = new Set(rows.map((r) => r.id));
+      const productCalls = convs.filter((r) => r.call.contactId && ids.has(r.call.contactId)).map((r) => r.call);
+      const rated = productCalls.filter((c) => value(c, D.satisfaction) && value(c, D.satisfaction) !== "unknown");
+      const happy = rated.filter((c) => value(c, D.satisfaction) === "happy").length;
+      const issueDist = distribution(productCalls, D.issue).filter((b) => b.value !== "none" && b.value !== "unknown");
+      const withAny = rows.filter((r) => orders(r) >= 1);
+      return {
+        product,
+        customers: rows.length,
+        repeatRate: withAny.length ? withAny.filter((r) => orders(r) >= 2).length / withAny.length : null,
+        runningLow: rows.filter((r) => r.cohort === "running_low").length,
+        lapsed: rows.filter((r) => r.cohort === "lapsed").length,
+        happyShare: rated.length ? happy / rated.length : null,
+        topIssue: issueDist[0]?.label ?? null,
+      };
+    })
+    .sort((a, b) => b.customers - a.customers);
+
+  const lift = computeLift(contactRows);
+  const reached = convs.filter((r) => value(r.call, D.reached) === "yes").length;
+  const openActions = allActions.filter((a) => a.action.status === "open").length;
+  const redFlags = allActions.filter((a) => a.action.type === "red_flag" && a.action.status === "open").length;
+  const latest =
+    convs.find((r) => r.call.transcript && r.call.conversationDuration >= 60) ??
+    convs.find((r) => r.call.transcript) ??
+    null;
+
+  return {
+    base: contactRows.length,
+    repeatRate: withOrders.length ? repeaters.length / withOrders.length : null,
+    repeaters: repeaters.length,
+    medianDaysBetweenOrders: median(intervals),
+    lifecycle,
+    atRiskThisWeek,
+    revenueAtRisk: reorderValueInr ? atRiskThisWeek * reorderValueInr : null,
+    reorderValueInr,
+    issues,
+    byProduct,
+    funnel: computeFunnel(contactRows, callRows, allActions, lift),
+    lift,
+    conversations: convs.length,
+    reachRate: convs.length ? reached / convs.length : null,
+    openActions,
+    redFlags,
+    latest,
+  };
+}
