@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { ArrowRight, Brain, Globe, ListChecks, ShieldCheck } from "lucide-react";
-import { and, desc, eq, gt } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { AutoRefresh } from "@/components/AutoRefresh";
 import { SetupNotice } from "@/components/SetupNotice";
 import { Transcript } from "@/components/Transcript";
 import { WebCall, type Persona } from "@/components/WebCall";
 import { Badge, Card, LinkButton, PageHeader } from "@/components/ui";
 import { getDb, schema } from "@/db";
+import { activeCalls } from "@/lib/calls";
 import { optionalEnv } from "@/lib/env";
 import { fmtDuration, fmtInrFromCents } from "@/lib/format";
 import { isConversation } from "@/lib/insights";
@@ -74,7 +75,6 @@ export default async function OverviewPage() {
   let costCents = 0;
   try {
     const db = getDb();
-    const since = new Date(Date.now() - 24 * 3_600_000);
     const [contactRows, callRows, recent] = await Promise.all([
       db
         .select()
@@ -88,10 +88,7 @@ export default async function OverviewPage() {
         .leftJoin(schema.contacts, eq(schema.calls.contactId, schema.contacts.id))
         .orderBy(desc(schema.calls.createdAt))
         .limit(200),
-      db
-        .select({ id: schema.calls.id, status: schema.calls.status, updatedAt: schema.calls.updatedAt })
-        .from(schema.calls)
-        .where(gt(schema.calls.updatedAt, since)),
+      activeCalls(),
     ]);
     personas = contactRows.map((c) => ({
       id: c.id,
