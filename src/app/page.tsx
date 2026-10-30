@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { and, eq } from "drizzle-orm";
-import { ArrowRight, CodeXml, LayoutDashboard, Mic, Moon, PhoneCall, Sun } from "lucide-react";
+import { ArrowRight, ChevronDown, CodeXml, LayoutDashboard, Mic, Moon, PhoneCall, Sun } from "lucide-react";
 import { WebCall, type Persona } from "@/components/WebCall";
 import { buttonClass, cx } from "@/components/ui";
 import { getDb, schema } from "@/db";
@@ -11,47 +11,48 @@ export const dynamic = "force-dynamic";
 
 const REPO = "https://github.com/dakshinsiva/dobara";
 
-const VALUE_ADDS = [
-  {
-    title: "Calls at the moment that matters",
-    body: "Cohorts build themselves from the store's orders: just delivered, running low, lapsed. The reorder cycle is learned from real gaps, per product, so the call lands days before the tub is empty.",
-    proof: "One read-only Shopify token. A 32-day protein cycle and a 44-day collagen cycle learned from the orders.",
-  },
-  {
-    title: "A conversation that gets answered",
-    body: "Two minutes in Hindi, Tamil, Kannada or English, switching when the customer does, from an assistant that says it is an AI and knows what they bought.",
-    proof:
-      "One real call moved through English, Hindi and Kannada in 2m 24s. ₹13 per conversation, telephony included.",
-  },
-  {
-    title: "Memory across calls",
-    body: "The next call opens with what the customer said last time: how they take it, what they disliked, what was promised.",
-    proof: "Written back after every completed call; shown on the customer record and the call page.",
-  },
-  {
-    title: "Answers that become actions and insight",
-    body: "Twelve structured fields per call. Promises become a queue a person clears; problems aggregate into why customers leave, by product.",
-    proof: "Action queue with WhatsApp deep links. Issue and satisfaction distributions. Per-product health.",
-  },
-  {
-    title: "Lift the CFO can approve",
-    body: "A share of customers is never called. Reorders in both groups are read from the store. The gap is reported with a significance test and the number of customers needed to confirm it.",
-    proof: "Called-versus-control split by a stable hash. Two-proportion test, incremental reorders, rupees.",
-  },
+const VALUE_ADDS: Array<[string, string]> = [
+  ["Calls at the right moment", "Cohorts build themselves from orders. The call lands days before the tub runs out."],
+  ["In the customer's language", "Hindi, Tamil, Kannada or English, switching mid-sentence. It says it is an AI."],
+  ["Remembers every call", "The next call opens with what the customer said last time."],
+  ["Turns answers into action", "Twelve structured fields per call. Promises become a queue a person clears."],
+  ["Proves the lift", "A share of customers is never called. The reorder gap is reported with a significance test."],
 ];
 
-const STEPS = [
+const STEPS: Array<[string, string]> = [
+  ["Connect the store", "Paste a read-only Shopify token."],
+  ["Dobara calls", "Running low, just delivered, lapsed. Every morning, 10:00 to 19:00."],
+  ["Measure the lift", "Called versus control, from the store's own reorders. Two weeks to a readout."],
+];
+
+const FAQ: Array<[string, string]> = [
   [
-    "Connect the store",
-    "Paste a read-only Shopify token. Every customer lands in a lifecycle stage with a language and a control share held out.",
+    "Who is it for?",
+    "Consumer brands whose product runs out: protein, supplements, skincare, coffee. Shopify today; a CSV works too.",
   ],
   [
-    "Dobara calls",
-    "Each morning, inside the 10:00 to 19:00 window: running low, just delivered, lapsed. Every call ends with twelve answers and a memory.",
+    "How long does onboarding take?",
+    "Minutes. Paste a read-only Shopify token. Cohorts, languages and the control group build themselves, and the first calls can go out the same day.",
   ],
   [
-    "Measure the lift",
-    "Reorders flow back from the store. Called versus control, with the confidence level and the rupee figure. Two weeks from token to readout.",
+    "How do you know it works?",
+    "A share of customers is never called. Reorders in both groups are read from the store, and the difference is reported with a significance test and the sample needed to confirm it.",
+  ],
+  [
+    "What happens after a call?",
+    "Twelve structured answers, a memory the next call opens with, and follow-ups for a person: a WhatsApp link to send, a callback, a complaint to route.",
+  ],
+  [
+    "What will it never do?",
+    "Pretend to be human, give medical advice, invent a price or delivery date, call outside 10:00 to 19:00, or call again after someone says stop.",
+  ],
+  [
+    "Is customer data safe?",
+    "The store token is read-only and encrypted at rest. The agent sees a name, a product and the last summary. Nothing is sent to a customer without a person pressing send.",
+  ],
+  [
+    "Can I ask it questions?",
+    "Yes. Ask Dobara answers by text or voice in the console, and the same analyst is an MCP server for Claude, ChatGPT and Cursor.",
   ],
 ];
 
@@ -87,6 +88,10 @@ function Wrap({ children, className }: { children: React.ReactNode; className?: 
   return <div className={cx("mx-auto w-full max-w-5xl px-4 md:px-8", className)}>{children}</div>;
 }
 
+function Eyebrow({ children }: { children: React.ReactNode }) {
+  return <div className="text-xs font-medium uppercase tracking-wider text-accent-2">{children}</div>;
+}
+
 export default async function LandingPage() {
   const cookieStore = await cookies();
   const theme = cookieStore.get("theme")?.value;
@@ -111,8 +116,8 @@ export default async function LandingPage() {
             <a href="#hear" className="hover:text-fg">
               Hear it
             </a>
-            <a href="#pricing" className="hover:text-fg">
-              Pricing
+            <a href="#faq" className="hover:text-fg">
+              FAQ
             </a>
             <a href={REPO} target="_blank" rel="noreferrer" className="hover:text-fg">
               GitHub
@@ -160,8 +165,7 @@ export default async function LandingPage() {
             <span className="font-medium text-fg underline decoration-accent-2 decoration-[3px] underline-offset-4">
               before they lapse
             </span>
-            , in their language, remembers every conversation, and proves the reorder lift against customers it never
-            called.
+            , in their language, remembers every conversation, and proves the lift.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <a href="#hear" className={buttonClass("primary", "md", "h-12 px-6 text-base")}>
@@ -173,9 +177,7 @@ export default async function LandingPage() {
               <ArrowRight className="size-4" aria-hidden />
             </Link>
           </div>
-          <p className="mt-4 text-sm text-faint">
-            No sign-up. Built on Bolna, Plivo and Sarvam for the Bolna Buildathon at Symphony 2026.
-          </p>
+          <p className="mt-4 text-sm text-faint">No sign-up. Built on Bolna, Plivo and Sarvam.</p>
 
           <div className="mt-14 overflow-hidden rounded-2xl border border-line bg-surface shadow-[0_24px_80px_-32px_rgb(217_98_26/0.35)]">
             <div className="flex items-center gap-1.5 border-b border-line px-4 py-2.5">
@@ -186,7 +188,7 @@ export default async function LandingPage() {
             </div>
             <Image
               src="/landing/overview.png"
-              alt="The Dobara Overview: repeat rate against the D2C benchmark, days between orders, customers at risk this week and what that is worth, lapsed customers, reorder lift, and open follow-ups."
+              alt="The Dobara Overview: repeat rate against the D2C benchmark, customers at risk this week, lapsed customers, reorder lift, and open follow-ups."
               width={1440}
               height={900}
               priority
@@ -201,34 +203,25 @@ export default async function LandingPage() {
       <section className="py-20 md:py-28">
         <Wrap>
           <p className="max-w-3xl text-2xl font-medium leading-snug tracking-tight md:text-4xl">
-            Indian D2C brands keep <span className="text-accent-2">20 to 30%</span> of first-time buyers. Text gets
-            ignored. A human call costs more than the margin on a tub. So nobody calls, and the brand finds out from a
-            dashboard three months after the customer has gone.
+            Brands keep <span className="text-accent-2">20 to 30%</span> of first-time buyers. Text gets ignored. Human
+            calls cost too much. So nobody calls.
           </p>
-          <p className="mt-6 max-w-2xl text-lg leading-8 text-muted">
-            Dobara makes the call, at the moment it matters, and shows the brand what it got for it.
-          </p>
+          <p className="mt-6 text-lg leading-8 text-muted">Dobara makes the call.</p>
         </Wrap>
       </section>
 
       {/* Product */}
       <section id="product" className="scroll-mt-20 border-t border-line bg-surface/60 py-20 md:py-28">
         <Wrap>
-          <div className="text-xs font-medium uppercase tracking-wider text-accent-2">What it does</div>
-          <h2 className="mt-2 max-w-2xl text-3xl font-semibold tracking-tight md:text-4xl">
-            Five things a brand cannot do today. One number it can take to the CFO.
-          </h2>
-          <ol className="mt-10 grid gap-x-10 gap-y-9 md:grid-cols-2">
-            {VALUE_ADDS.map((v, i) => (
-              <li key={v.title} className={cx(i === VALUE_ADDS.length - 1 && "md:col-span-2 md:max-w-2xl")}>
+          <Eyebrow>What it does</Eyebrow>
+          <ol className="mt-6 grid gap-x-10 gap-y-8 md:grid-cols-2">
+            {VALUE_ADDS.map(([t, b], i) => (
+              <li key={t} className={cx(i === VALUE_ADDS.length - 1 && "md:col-span-2 md:max-w-xl")}>
                 <div className="flex items-baseline gap-3">
                   <span className="text-sm font-semibold text-accent-2 tnum">0{i + 1}</span>
-                  <h3 className="text-lg font-semibold">{v.title}</h3>
+                  <h3 className="text-lg font-semibold">{t}</h3>
                 </div>
-                <p className="mt-2 text-base leading-7 text-muted">{v.body}</p>
-                <p className="mt-2 text-sm leading-6 text-faint">
-                  <span className="font-medium text-muted">In the product today:</span> {v.proof}
-                </p>
+                <p className="mt-1.5 text-base leading-7 text-muted">{b}</p>
               </li>
             ))}
           </ol>
@@ -240,11 +233,8 @@ export default async function LandingPage() {
         <Wrap>
           <div className="grid items-center gap-10 lg:grid-cols-2">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-accent-2">How it works</div>
-              <h2 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
-                Token to lift readout in two weeks.
-              </h2>
-              <ol className="mt-8 space-y-6">
+              <Eyebrow>How it works</Eyebrow>
+              <ol className="mt-6 space-y-6">
                 {STEPS.map(([t, b], i) => (
                   <li key={t} className="flex gap-4">
                     <span className="mt-0.5 grid size-7 shrink-0 place-items-center rounded-full bg-accent-2 text-xs font-semibold text-accent-2-fg tnum">
@@ -257,15 +247,11 @@ export default async function LandingPage() {
                   </li>
                 ))}
               </ol>
-              <p className="mt-8 text-sm leading-6 text-faint">
-                Underneath: cohort curves, a learned reorder cycle per product, segments that each map to a call, and an
-                analyst you can ask by voice or from Claude over MCP.
-              </p>
             </div>
             <div className="overflow-hidden rounded-2xl border border-line bg-surface shadow-card">
               <Image
                 src="/landing/retention.png"
-                alt="The Retention page: second-order rate against the D2C benchmark, the 32-day reorder cycle, a weak August cohort flagged in the heatmap, and the insights read for you."
+                alt="The Retention page: cohort curves, the learned reorder cycle, and the insights read for you."
                 width={1440}
                 height={900}
                 sizes="(min-width: 1024px) 480px, 100vw"
@@ -281,18 +267,13 @@ export default async function LandingPage() {
         <Wrap>
           <div className="grid gap-10 lg:grid-cols-2">
             <div>
-              <div className="text-xs font-medium uppercase tracking-wider text-accent-2">Hear it</div>
+              <Eyebrow>Hear it</Eyebrow>
               <h2 className="mt-2 text-3xl font-semibold tracking-tight md:text-4xl">
                 Talk to the agent that phones customers.
               </h2>
               <p className="mt-4 text-base leading-7 text-muted">
-                Same prompt, memory and extractions, over your microphone instead of Plivo. Answer in Hindi halfway
-                through; say you have three scoops left; say the mocha is too sweet; ask if it is a bot; tell it to stop
-                calling. The conversation lands in{" "}
-                <Link href="/calls" className="text-accent hover:underline">
-                  Calls
-                </Link>{" "}
-                like any other.
+                Same agent, over your microphone. Switch to Hindi halfway through. Say you have three scoops left. Ask
+                if it is a bot.
               </p>
             </div>
             <div className="rounded-2xl border border-line bg-surface p-5 shadow-card">
@@ -306,58 +287,32 @@ export default async function LandingPage() {
         </Wrap>
       </section>
 
-      {/* Pricing */}
-      <section id="pricing" className="scroll-mt-20 py-20 md:py-28">
+      {/* FAQ */}
+      <section id="faq" className="scroll-mt-20 py-20 md:py-28">
         <Wrap>
-          <div className="text-xs font-medium uppercase tracking-wider text-accent-2">Pricing</div>
-          <h2 className="mt-2 max-w-3xl text-3xl font-semibold tracking-tight md:text-4xl">
-            ₹30 per conversation that reaches a customer. Nothing else.
-          </h2>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-muted">
-            No-answers are free. No platform fee. Every brand starts with a two-week free pilot that ends in a written
-            lift readout. One saved reorder pays for fifty to eighty conversations, so the brand is ahead at a one-point
-            lift.
-          </p>
-          <p className="mt-3 text-sm text-faint">
-            Lift-based billing, a share of incremental reorders measured against the control group, for portfolio deals.
-          </p>
-        </Wrap>
-      </section>
-
-      {/* Founders */}
-      <section className="border-t border-line bg-surface/60 py-20 md:py-28">
-        <Wrap>
-          <div className="text-xs font-medium uppercase tracking-wider text-accent-2">Founders</div>
-          <div className="mt-6 grid gap-8 md:grid-cols-2">
-            {[
-              [
-                "Chiranjeevi Vijayaraghavan",
-                "Head of Operations at Cosmix, a Marico-backed plant-protein brand. Before that xto10x, Yogabar, Rivigo and AB InBev. He knows which customers to call and what the ops team will tolerate.",
-              ],
-              [
-                "Dakshin Siva",
-                "Built Dobara end to end. Founder of Nexus, an AI-native chartered-accountancy firm; earlier data and software engineering at Coinbase and Cypher.",
-              ],
-            ].map(([name, bio]) => (
-              <div key={name}>
-                <h3 className="text-lg font-semibold">{name}</h3>
-                <p className="mt-2 text-base leading-7 text-muted">{bio}</p>
-              </div>
+          <Eyebrow>FAQ</Eyebrow>
+          <div className="mt-6 max-w-3xl divide-y divide-line border-y border-line">
+            {FAQ.map(([q, a]) => (
+              <details key={q} className="group">
+                <summary className="flex cursor-pointer list-none items-center justify-between gap-4 py-4 text-base font-medium marker:hidden [&::-webkit-details-marker]:hidden">
+                  {q}
+                  <ChevronDown
+                    className="size-4 shrink-0 text-faint transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <p className="pb-5 pr-8 text-base leading-7 text-muted">{a}</p>
+              </details>
             ))}
           </div>
-          <p className="mt-10 max-w-2xl text-base leading-7 text-muted">
-            A two-minute conversation in an Indian language costs ₹13 this year. Last year it was not possible at any
-            price. The economics of calling every customer every cycle only started to work in 2026, and we are building
-            the retention layer on top of it.
-          </p>
         </Wrap>
       </section>
 
       {/* CTA + footer */}
-      <section className="py-20">
+      <section className="border-t border-line bg-surface/60 py-20">
         <Wrap className="text-center">
           <h2 className="text-3xl font-semibold tracking-tight md:text-4xl">
-            Every brand on Shopify can do this with one token.
+            One token. Every customer, called on time.
           </h2>
           <div className="mt-7 flex flex-wrap justify-center gap-3">
             <Link href="/overview" className={buttonClass("primary", "md", "h-12 px-6 text-base")}>
@@ -374,14 +329,14 @@ export default async function LandingPage() {
               Read the code
             </a>
           </div>
+          <p className="mt-8 text-sm text-muted">
+            Built by Chiranjeevi Vijayaraghavan, Head of Operations at Cosmix, and Dakshin Siva, ex Coinbase and Cypher.
+          </p>
         </Wrap>
       </section>
       <footer className="border-t border-line py-8 text-xs text-faint">
         <Wrap className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-          <div>
-            Dobara (दोबारा) means &ldquo;again&rdquo;. Says it is an AI, never gives medical advice, honours &ldquo;stop
-            calling&rdquo; forever.
-          </div>
+          <div>Dobara (दोबारा) means &ldquo;again&rdquo;.</div>
           <div className="flex flex-wrap gap-4">
             <a href={REPO} target="_blank" rel="noreferrer" className="hover:text-fg">
               github.com/dakshinsiva/dobara
