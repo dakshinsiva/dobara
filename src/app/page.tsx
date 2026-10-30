@@ -131,7 +131,7 @@ export default async function LandingPage() {
             >
               {theme === "dark" ? <Sun className="size-4" aria-hidden /> : <Moon className="size-4" aria-hidden />}
             </a>
-            <Link href="/overview" className={buttonClass("ghost", "sm", "hidden whitespace-nowrap sm:inline-flex")}>
+            <Link href="/overview" className={buttonClass("ghost", "sm", "max-sm:hidden whitespace-nowrap")}>
               Open the console
             </Link>
             <a href="#hear" className={buttonClass("primary", "sm", "whitespace-nowrap")}>
