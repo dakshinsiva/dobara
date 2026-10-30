@@ -28,9 +28,13 @@ export async function passwordMatches(candidate: string): Promise<boolean> {
   return a === b;
 }
 
-/** Paths that must stay reachable without a session: machine-to-machine routes and the login itself. */
+/** Paths that must stay reachable without a session: the landing page, brand assets, machine-to-machine routes and the login itself. */
 export function isPublicPath(pathname: string): boolean {
   return (
+    pathname === "/" ||
+    pathname === "/opengraph-image" ||
+    pathname === "/apple-icon" ||
+    pathname === "/manifest.webmanifest" ||
     pathname === "/login" ||
     pathname === "/api/login" ||
     pathname.startsWith("/api/webhooks/") ||

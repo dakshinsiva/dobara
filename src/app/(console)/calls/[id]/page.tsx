@@ -12,7 +12,7 @@ import { getDb, schema } from "@/db";
 import { fmtDateTime, fmtDuration, fmtInrFromCents, fmtPhone, fmtUsdCents } from "@/lib/format";
 import { EXTRACTION_LABEL, isLive } from "@/lib/labels";
 import { reorderMessage, whatsappLink } from "@/lib/whatsapp";
-import { CATEGORY, D } from "../../../../bolna/dispositions.mjs";
+import { CATEGORY, D } from "../../../../../bolna/dispositions.mjs";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Call" };

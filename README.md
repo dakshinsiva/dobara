@@ -25,6 +25,8 @@ Three cohorts drive the calls: **new** (delivered 4 to 7 days ago), **running lo
 
 There is also a **Talk to Dobara** page: the same agent over the browser microphone (WebRTC), so a judge or a brand lead can hear it without a phone.
 
+The root of the site is a **landing page** (the pitch, the five value adds with proof, retention analytics, how it works, pricing, team, and an embedded browser call). The console lives under `/overview` and the other sidebar routes; `src/app/(console)/` holds those pages with the sidebar layout.
+
 ## Stack
 
 | Layer         | Choice                                                                                  | Why                                                                                                              |
@@ -133,7 +135,7 @@ CI (GitHub Actions) runs format check, lint, typecheck and build on every push a
 bolna/            agent config, prompt, extraction fields (brand-specific, synced to Bolna)
 drizzle/          SQL migrations
 scripts/          migrate, reset, agent sync, whoami (plain Node, no build step)
-src/app/          console pages and API routes (App Router)
+src/app/          landing page (page.tsx), console pages under (console)/, API routes (App Router)
 src/components/   UI primitives (components/ui) and feature components
 src/db/           Drizzle schema and driver selection (PGlite, Neon, pg)
 src/lib/          Bolna client, call lifecycle, insights, retention (cohorts, ladder, segments, windows), labels, formatting

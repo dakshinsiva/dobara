@@ -8,7 +8,7 @@ import { Card, EmptyState, LinkButton, PageHeader, StatusBadge, Table, Td, Th, T
 import { recentCalls } from "@/lib/calls";
 import { fmtDateTime, fmtDuration, fmtInrFromCents } from "@/lib/format";
 import { isLive } from "@/lib/labels";
-import { CATEGORY, D } from "../../../bolna/dispositions.mjs";
+import { CATEGORY, D } from "../../../../bolna/dispositions.mjs";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Calls" };

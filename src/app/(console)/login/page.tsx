@@ -21,7 +21,7 @@ export default async function LoginPage(props: { searchParams: Promise<{ back?: 
           </div>
         </div>
         <form method="post" action="/api/login" className="space-y-3">
-          <input type="hidden" name="back" value={back ?? "/"} />
+          <input type="hidden" name="back" value={back ?? "/overview"} />
           <label className="block text-sm">
             <span className="text-muted">Workspace password</span>
             <input

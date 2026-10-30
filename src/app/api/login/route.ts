@@ -4,7 +4,7 @@ import { authEnabled, passwordMatches, SESSION_COOKIE, sessionToken } from "@/li
 export const runtime = "nodejs";
 
 function safeBack(value: string | null): string {
-  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/";
+  return value && value.startsWith("/") && !value.startsWith("//") ? value : "/overview";
 }
 
 /** Form post from /login. Sets the session cookie on success. */

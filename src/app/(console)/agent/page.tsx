@@ -3,9 +3,9 @@ import { Badge, Card, KeyValue, PageHeader } from "@/components/ui";
 import { bolna } from "@/lib/bolna";
 import { optionalEnv } from "@/lib/env";
 import { fmtUsdCents } from "@/lib/format";
-import { LANGUAGES } from "../../../bolna/agent.config.mjs";
-import { CATEGORY, DISPOSITIONS } from "../../../bolna/dispositions.mjs";
-import { AGENT_NAME, SYSTEM_PROMPT, WELCOME_MESSAGE } from "../../../bolna/prompts.mjs";
+import { LANGUAGES } from "../../../../bolna/agent.config.mjs";
+import { CATEGORY, DISPOSITIONS } from "../../../../bolna/dispositions.mjs";
+import { AGENT_NAME, SYSTEM_PROMPT, WELCOME_MESSAGE } from "../../../../bolna/prompts.mjs";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Agent" };

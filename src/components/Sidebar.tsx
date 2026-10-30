@@ -34,7 +34,7 @@ export function Sidebar({
   const nextTheme = theme === "dark" ? "light" : "dark";
 
   const primary: Item[] = [
-    { href: "/", label: "Overview", icon: LayoutDashboard },
+    { href: "/overview", label: "Overview", icon: LayoutDashboard },
     { href: "/contacts", label: "Customers", icon: Users },
     { href: "/calls", label: "Calls", icon: PhoneCall },
     { href: "/actions", label: "Actions", icon: ListChecks, badge: openActions },
@@ -49,7 +49,7 @@ export function Sidebar({
     { href: "/agent", label: "Agent", icon: Settings2 },
   ];
 
-  const isActive = (href: string) => (href === "/" ? pathname === "/" : pathname.startsWith(href));
+  const isActive = (href: string) => pathname.startsWith(href);
 
   const renderItem = (item: Item) => {
     const active = isActive(item.href);
@@ -82,7 +82,7 @@ export function Sidebar({
   return (
     <aside className="border-b border-line bg-surface md:sticky md:top-0 md:h-screen md:border-b-0 md:border-r md:relative">
       <div className="flex items-center gap-3 px-4 py-4 md:px-5">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/overview" className="flex items-center gap-2.5">
           <span className="grid size-8 place-items-center rounded-lg bg-accent text-accent-fg">
             <PhoneCall className="size-4" aria-hidden />
           </span>
@@ -127,6 +127,10 @@ export function Sidebar({
           Voice by Bolna · Calls on Plivo
           <br />
           Speech by Sarvam
+          <br />
+          <Link href="/" className="hover:text-fg hover:underline">
+            About Dobara
+          </Link>
         </div>
       </div>
     </aside>
