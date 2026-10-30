@@ -126,6 +126,7 @@ Notes:
 | `pnpm db:reset`                                | Truncates all tables for a clean demo                                            |
 | `pnpm agent:sync`                              | Creates or updates the Bolna agent, extraction category and fields from `bolna/` |
 | `pnpm bolna:me`                                | Prints the Bolna account and wallet                                              |
+| `pnpm mcp:check`                               | 22 checks against an MCP endpoint (`MCP_URL`, `MCP_TOKEN`; local by default)     |
 
 CI (GitHub Actions) runs format check, lint, typecheck and build on every push and pull request.
 

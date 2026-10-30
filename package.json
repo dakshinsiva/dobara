@@ -19,7 +19,8 @@
     "db:reset": "node --env-file=.env.local scripts/reset-db.mjs",
     "agent:sync": "node --env-file=.env.local scripts/sync-agent.mjs",
     "bolna:me": "node --env-file=.env.local scripts/whoami.mjs",
-    "demo:seed": "node scripts/seed-demo.mjs"
+    "demo:seed": "node scripts/seed-demo.mjs",
+    "mcp:check": "node --env-file=.env.local scripts/mcp-check.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.160",
