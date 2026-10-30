@@ -1,6 +1,6 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "Dobara, the retention agent for consumer brands";
+export const alt = "Dobara, the proactive retention agent for consumer brands";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -52,7 +52,7 @@ export default function OpenGraphImage() {
 
       <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
         <div style={{ fontSize: 68, fontWeight: 700, lineHeight: 1.05, letterSpacing: -2, maxWidth: 1000 }}>
-          The retention agent for consumer brands.
+          The proactive retention agent for consumer brands.
         </div>
         <div style={{ fontSize: 30, color: "#bfcbc7", lineHeight: 1.35, maxWidth: 980 }}>
           Calls your customers before they lapse, in their language. Remembers every call. Proves the lift against

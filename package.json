@@ -2,7 +2,7 @@
   "name": "dobara",
   "version": "0.1.0",
   "private": true,
-  "description": "The retention agent for consumer brands: voice check-ins on Bolna and Plivo that bring customers back.",
+  "description": "The proactive retention agent for consumer brands: voice check-ins on Bolna and Plivo that bring customers back.",
   "engines": {
     "node": ">=22"
   },

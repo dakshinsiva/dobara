@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Dobara",
     short_name: "Dobara",
-    description: "The retention agent for consumer brands. Voice check-ins that bring customers back.",
+    description: "The proactive retention agent for consumer brands. Voice check-ins that bring customers back.",
     start_url: "/",
     display: "standalone",
     background_color: "#f6f5f2",

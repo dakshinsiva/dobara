@@ -1,6 +1,6 @@
 # Dobara
 
-**The retention agent for consumer brands.** Dobara phones a brand's customers at the moment they would otherwise lapse, in their own language, remembers every past conversation, and turns what it hears into follow-ups, product insight and measured reorder lift.
+**The proactive retention agent for consumer brands.** Dobara phones a brand's customers at the moment they would otherwise lapse, in their own language, remembers every past conversation, and turns what it hears into follow-ups, product insight and measured reorder lift.
 
 Built for the Bolna Buildathon at Symphony 2026, with Cosmix as the first design partner.
 

@@ -8,7 +8,7 @@ const mono = Geist_Mono({ subsets: ["latin"], variable: "--font-geist-mono" });
 
 const siteUrl = process.env.PUBLIC_BASE_URL || "https://dobara-app.vercel.app";
 const description =
-  "The retention agent for consumer brands. Dobara calls customers before they lapse, in their language, remembers every call, and proves the lift against customers it never called.";
+  "The proactive retention agent for consumer brands. Dobara calls customers before they lapse, in their language, remembers every call, and proves the lift against customers it never called.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -23,12 +23,12 @@ export const metadata: Metadata = {
     locale: "en_IN",
     url: siteUrl,
     siteName: "Dobara",
-    title: "Dobara, the retention agent for consumer brands",
+    title: "Dobara, the proactive retention agent for consumer brands",
     description,
   },
   twitter: {
     card: "summary_large_image",
-    title: "Dobara, the retention agent for consumer brands",
+    title: "Dobara, the proactive retention agent for consumer brands",
     description,
   },
   robots: { index: true, follow: true },

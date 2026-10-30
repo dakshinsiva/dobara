@@ -19,6 +19,10 @@
   --accent-hover: #0b5f59;
   --accent-soft: #e1f2ef;
   --accent-fg: #ffffff;
+  /* Second accent: a warm marigold for emphasis beside the teal */
+  --accent-2: #d9621a;
+  --accent-2-soft: #fbe9dc;
+  --accent-2-fg: #ffffff;
   --good: #0ca30c;
   --good-bg: #e3f4e3;
   --good-fg: #146414;
@@ -49,6 +53,9 @@
     --accent-hover: #4cc8b9;
     --accent-soft: #163b37;
     --accent-fg: #06201d;
+    --accent-2: #f3a15a;
+    --accent-2-soft: #3d2612;
+    --accent-2-fg: #1f1308;
     --good: #3fbf3f;
     --good-bg: #163a16;
     --good-fg: #9be49b;
@@ -79,6 +86,9 @@
   --accent-hover: #4cc8b9;
   --accent-soft: #163b37;
   --accent-fg: #06201d;
+  --accent-2: #f3a15a;
+  --accent-2-soft: #3d2612;
+  --accent-2-fg: #1f1308;
   --good: #3fbf3f;
   --good-bg: #163a16;
   --good-fg: #9be49b;
@@ -107,6 +117,9 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-fg: var(--accent-fg);
+  --color-accent-2: var(--accent-2);
+  --color-accent-2-soft: var(--accent-2-soft);
+  --color-accent-2-fg: var(--accent-2-fg);
   --color-good: var(--good);
   --color-good-bg: var(--good-bg);
   --color-good-fg: var(--good-fg);
