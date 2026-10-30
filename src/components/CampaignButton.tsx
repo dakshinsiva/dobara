@@ -36,7 +36,7 @@ export function CampaignButton({
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(segment ? { segment } : { cohort }),
+        body: JSON.stringify({ cohort, segment }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? res.statusText);

@@ -90,7 +90,7 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
         description="Every customer imported from the brand's order data, split into a called group and an uncalled control group so lift can be measured honestly."
         actions={
           <>
-            <CampaignButton cohort={cohort} eligible={eligible.length} size="md" />
+            <CampaignButton cohort={cohort} segment={segment} eligible={eligible.length} size="md" />
             <LinkButton href="/import" variant="primary">
               <Upload className="size-4" aria-hidden />
               Import
