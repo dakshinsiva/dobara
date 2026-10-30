@@ -11,11 +11,13 @@ import { daysSince, fmtDate, fmtPhone } from "@/lib/format";
 import { eligibleForCampaign } from "@/lib/insights";
 import { recentCalls } from "@/lib/calls";
 import { COHORT_LABEL, GROUP_LABEL, LANGUAGE_LABEL } from "@/lib/labels";
+import { getRetention } from "@/lib/retention";
+import { SEGMENT_LABEL, SEGMENT_TONE, isSegment, type Segment } from "@/lib/segments";
 
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Customers" };
 
-type Params = { cohort?: string; group?: string; lang?: string; q?: string };
+type Params = { cohort?: string; group?: string; lang?: string; q?: string; segment?: string };
 
 function href(current: Params, patch: Partial<Params>) {
   const next = { ...current, ...patch };
@@ -46,15 +48,21 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
   const group = GROUPS.includes(params.group as Group) ? (params.group as Group) : undefined;
   const lang = LANGUAGES.includes(params.lang as Language) ? (params.lang as Language) : undefined;
   const q = params.q?.trim().toLowerCase() ?? "";
+  const segment: Segment | undefined = isSegment(params.segment) ? params.segment : undefined;
 
   let all;
   let calls;
+  let segmentIds: Set<string> | null = null;
   try {
     const db = getDb();
     [all, calls] = await Promise.all([
       db.select().from(schema.contacts).orderBy(desc(schema.contacts.createdAt)).limit(500),
       recentCalls(500),
     ]);
+    if (segment) {
+      const r = await getRetention();
+      segmentIds = new Set(r.segments.find((s) => s.segment === segment)?.memberIds ?? []);
+    }
   } catch (e) {
     return <SetupNotice error={e instanceof Error ? e.message : String(e)} />;
   }
@@ -65,6 +73,7 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
       (!cohort || c.cohort === cohort) &&
       (!group || c.group === group) &&
       (!lang || c.language === lang) &&
+      (!segmentIds || segmentIds.has(c.id)) &&
       (!q || c.name.toLowerCase().includes(q) || c.phone.includes(q))
   );
   const eligible = eligibleForCampaign(rows, calls, cohort);
@@ -117,7 +126,21 @@ export default async function ContactsPage(props: { searchParams: Promise<Params
             {LANGUAGE_LABEL[l]}
           </Chip>
         ))}
+        {segment && (
+          <>
+            <span className="mx-1 h-4 w-px bg-line" aria-hidden />
+            <Link
+              href={href(params, { segment: undefined })}
+              className="inline-flex items-center gap-1.5 rounded-full border border-accent bg-accent-soft px-3 py-1 text-xs font-medium text-accent"
+              title="Clear the segment filter"
+            >
+              <Badge tone={SEGMENT_TONE[segment]}>{SEGMENT_LABEL[segment]}</Badge>
+              segment ×
+            </Link>
+          </>
+        )}
         <form className="ml-auto" action="/contacts">
+          {segment && <input type="hidden" name="segment" value={segment} />}
           {cohort && <input type="hidden" name="cohort" value={cohort} />}
           {group && <input type="hidden" name="group" value={group} />}
           {lang && <input type="hidden" name="lang" value={lang} />}

@@ -24,6 +24,18 @@ export function guessLanguage(provinceCode: string | null | undefined, fallback:
   return (provinceCode && STATE_LANGUAGE[provinceCode.toUpperCase()]) || fallback;
 }
 
+export type OrderSnapshot = {
+  externalId: string;
+  orderedAt: string; // YYYY-MM-DD
+  deliveredAt: string | null;
+  product: string | null;
+  flavour: string | null;
+  quantity: number;
+  total: number | null;
+  currency: string | null;
+  discounted: boolean;
+};
+
 export type CustomerSnapshot = {
   externalId: string | null;
   name: string;
@@ -35,6 +47,8 @@ export type CustomerSnapshot = {
   deliveredAt: string | null;
   product: string | null;
   flavour: string | null;
+  /** Every non-cancelled order, oldest first */
+  orders: OrderSnapshot[];
 };
 
 const day = (iso: string) => iso.slice(0, 10);
@@ -63,6 +77,20 @@ function productOf(o: ShopifyOrder): { product: string | null; flavour: string |
   return { product: li.title, flavour };
 }
 
+function orderSnapshot(o: ShopifyOrder): OrderSnapshot {
+  const amount = Number(o.currentTotalPriceSet?.shopMoney?.amount);
+  return {
+    externalId: o.id,
+    orderedAt: day(o.createdAt),
+    deliveredAt: deliveredAtOf(o),
+    ...productOf(o),
+    quantity: (o.lineItems?.nodes ?? []).reduce((n, li) => n + (li.quantity || 0), 0) || 1,
+    total: Number.isFinite(amount) ? amount : null,
+    currency: o.currentTotalPriceSet?.shopMoney?.currencyCode ?? null,
+    discounted: (o.discountCodes?.length ?? 0) > 0,
+  };
+}
+
 /** Group orders by customer phone. The newest order supplies product and delivery. */
 export function snapshotCustomers(orders: ShopifyOrder[]): CustomerSnapshot[] {
   const byPhone = new Map<string, ShopifyOrder[]>();
@@ -89,6 +117,7 @@ export function snapshotCustomers(orders: ShopifyOrder[]): CustomerSnapshot[] {
       lastOrderAt: day(latest.createdAt),
       deliveredAt: deliveredAtOf(latest),
       ...productOf(latest),
+      orders: [...group].reverse().map(orderSnapshot),
     });
   }
   return out;

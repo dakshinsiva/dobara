@@ -68,6 +68,28 @@ export const contacts = pgTable("contacts", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+/** One order per row, from the store sync. Drives cohort curves, replenishment windows and segments. */
+export const orders = pgTable("orders", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  contactId: uuid("contact_id")
+    .notNull()
+    .references(() => contacts.id, { onDelete: "cascade" }),
+  /** The store's order id (gid://shopify/Order/123) */
+  externalId: text("external_id").notNull().unique(),
+  orderedAt: date("ordered_at").notNull(),
+  deliveredAt: date("delivered_at"),
+  product: text("product"),
+  flavour: text("flavour"),
+  quantity: integer("quantity").notNull().default(1),
+  /** Order total in the store's currency, when the store reports it */
+  total: real("total"),
+  currency: text("currency"),
+  /** 1 when a discount code was used */
+  discounted: integer("discounted").notNull().default(0),
+  source: text("source").$type<Source>().notNull().default("shopify"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const calls = pgTable("calls", {
   id: uuid("id").primaryKey().defaultRandom(),
   contactId: uuid("contact_id").references(() => contacts.id, { onDelete: "set null" }),
@@ -120,6 +142,8 @@ export type SyncSummary = {
   reorders: number;
   skipped: number;
   byCohort: Record<string, number>;
+  /** Days per order learned from repeat gaps, per product; applied when the sample is big enough */
+  windows?: Record<string, number>;
   error?: string;
 };
 
@@ -151,6 +175,8 @@ export type ExtractedData = Record<string, Record<string, ExtractionResult>>;
 
 export type Contact = typeof contacts.$inferSelect;
 export type NewContact = typeof contacts.$inferInsert;
+export type Order = typeof orders.$inferSelect;
+export type NewOrder = typeof orders.$inferInsert;
 export type Call = typeof calls.$inferSelect;
 export type NewCall = typeof calls.$inferInsert;
 export type Action = typeof actions.$inferSelect;

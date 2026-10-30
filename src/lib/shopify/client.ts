@@ -30,6 +30,8 @@ export type ShopifyOrder = {
     updatedAt: string;
   }>;
   lineItems: { nodes: Array<{ title: string; variantTitle: string | null; quantity: number }> };
+  currentTotalPriceSet?: { shopMoney: { amount: string; currencyCode: string } } | null;
+  discountCodes?: string[];
 };
 
 export const ORDERS_QUERY = `
@@ -46,6 +48,8 @@ export const ORDERS_QUERY = `
         shippingAddress { phone provinceCode firstName lastName }
         fulfillments { status displayStatus deliveredAt updatedAt }
         lineItems(first: 10) { nodes { title variantTitle quantity } }
+        currentTotalPriceSet { shopMoney { amount currencyCode } }
+        discountCodes
       }
     }
   }

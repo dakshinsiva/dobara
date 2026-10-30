@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   ChartColumn,
+  Grid3x3,
   LayoutDashboard,
   ListChecks,
   MessageCircleMore,
@@ -37,6 +38,7 @@ export function Sidebar({
     { href: "/contacts", label: "Customers", icon: Users },
     { href: "/calls", label: "Calls", icon: PhoneCall },
     { href: "/actions", label: "Actions", icon: ListChecks, badge: openActions },
+    { href: "/retention", label: "Retention", icon: Grid3x3 },
     { href: "/insights", label: "Insights", icon: ChartColumn },
     { href: "/talk", label: "Talk to Dobara", icon: Mic, accent: true },
     { href: "/ask", label: "Ask Dobara", icon: MessageCircleMore },

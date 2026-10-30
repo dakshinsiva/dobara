@@ -7,6 +7,7 @@ import { Badge, Bar, Card, EmptyState, LinkButton, PageHeader, Stat, Table, Td, 
 import { activeCalls } from "@/lib/calls";
 import { optionalEnv } from "@/lib/env";
 import { fmtDuration, fmtInrFromCents, pct } from "@/lib/format";
+import { BENCHMARKS, compare, rangeText } from "@/lib/benchmarks";
 import { describeSignificance, getRetentionHealth, type RetentionHealth } from "@/lib/insights";
 import { getIntegration } from "@/lib/shopify/sync";
 import { COHORT_HINT, COHORT_LABEL, isLive } from "@/lib/labels";
@@ -124,8 +125,18 @@ export default async function OverviewPage() {
             <Stat
               label="Repeat rate"
               value={h.repeatRate == null ? "—" : `${Math.round(h.repeatRate * 100)}%`}
-              hint={`${h.repeaters} of ${h.base} bought more than once`}
-              tone={h.repeatRate != null && h.repeatRate >= 0.3 ? "good" : "neutral"}
+              hint={
+                h.repeatRate == null
+                  ? `${h.repeaters} of ${h.base} bought more than once`
+                  : `${h.repeaters} of ${h.base} · D2C ${rangeText(BENCHMARKS.secondOrder)}, India ${rangeText(BENCHMARKS.indiaD2C)}`
+              }
+              tone={
+                compare(h.repeatRate, BENCHMARKS.secondOrder) === "above"
+                  ? "good"
+                  : compare(h.repeatRate, BENCHMARKS.secondOrder) === "below"
+                    ? "warning"
+                    : "neutral"
+              }
             />
             <Stat
               label="Days between orders"
@@ -269,6 +280,11 @@ export default async function OverviewPage() {
           <Card
             title="By product"
             description="Where retention is weakest, and what customers say about each one."
+            action={
+              <Link href="/retention" className="whitespace-nowrap text-xs font-medium text-accent hover:underline">
+                Cohorts, segments and call timing
+              </Link>
+            }
             padded={false}
           >
             <Table>

@@ -4,7 +4,7 @@
  * Model routes through Vercel AI Gateway (OIDC on Vercel, AI_GATEWAY_API_KEY elsewhere).
  */
 import { InferAgentUIMessage, ToolLoopAgent, stepCountIs, tool } from "ai";
-import { and, desc, eq, ilike, or } from "drizzle-orm";
+import { and, desc, eq, ilike, inArray, or } from "drizzle-orm";
 import { z } from "zod";
 import { getDb, schema } from "@/db";
 import { COHORTS, GROUPS, LANGUAGES } from "@/db/schema";
@@ -12,6 +12,8 @@ import { optionalEnv } from "./env";
 import { fmtDate } from "./format";
 import { describeSignificance, getInsights, getRetentionHealth, listActions } from "./insights";
 import { ACTION_LABEL, COHORT_LABEL, humanize } from "./labels";
+import { getRetention } from "./retention";
+import { SEGMENTS } from "./segments";
 import { CATEGORY, D } from "../../bolna/dispositions.mjs";
 
 const { contacts, calls } = schema;
@@ -50,7 +52,8 @@ function callSummary(call: typeof calls.$inferSelect, name?: string | null) {
   };
 }
 
-const tools = {
+/** Read-only tools over the workspace. Shared by the Ask page and the MCP server. */
+export const askTools = {
   retention_health: tool({
     description:
       "Retention health of the whole customer base: repeat rate, days between orders, lifecycle counts, at-risk customers and rupees, why customers leave, per-product health, reorder lift vs control, reach rate, open follow-ups. Use first for any 'how are we doing' question.",
@@ -263,12 +266,126 @@ const tools = {
       };
     },
   }),
+
+  cohort_retention: tool({
+    description:
+      "Cohort retention by month of first order (share who placed a second order within N months), weak cohorts, the purchase ladder (first→second, second→third, third→fourth order) against D2C benchmarks, the discount effect on repeat, and plain-language insights. Use for 'which month's customers repeat best', 'is retention getting worse', 'how do we compare to benchmarks'.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const r = await getRetention();
+      return {
+        customers: r.customers,
+        withPurchases: r.withPurchases,
+        secondOrderRate: r.secondOrderRate,
+        reorderCycleDays: r.cycleDays,
+        cycleGaps: r.cycleGaps,
+        callDay: r.callDay,
+        cohorts: r.cohorts.rows.map((row) => ({
+          firstOrderMonth: row.label,
+          customers: row.size,
+          ageMonths: row.ageMonths,
+          secondOrderWithinMonths: row.cells.map((v, k) => ({ months: k, rate: v })),
+        })),
+        typicalByMonth: r.cohorts.typical.map((v, k) => ({ months: k, rate: v })),
+        weakCohorts: r.cohorts.weak,
+        ladder: r.ladder.map((s) => ({
+          step: `${s.from}→${s.to} orders`,
+          base: s.base,
+          converted: s.converted,
+          rate: s.rate,
+          benchmark: s.benchmark.label,
+          verdict: s.verdict,
+        })),
+        discountEffect: r.discount,
+        insights: r.insights,
+      };
+    },
+  }),
+
+  segments: tool({
+    description:
+      "RFM segments read through a replenishment lens: champions, loyal, promising, at risk, hibernating, lost. Counts, share, past spend, orders each, what Dobara does for each and how many can be called now. Pass a segment to list its members. Use for 'who should we call first', 'how many are at risk', 'what do we do with champions'.",
+    inputSchema: z.object({
+      segment: z.enum(SEGMENTS).optional().describe("Also return up to 50 members of this segment"),
+    }),
+    execute: async ({ segment }) => {
+      const r = await getRetention();
+      const summaries = r.segments.map((s) => ({
+        segment: s.segment,
+        label: s.label,
+        rule: s.rule,
+        whatDobaraDoes: s.playbook,
+        customers: s.customers,
+        share: s.share,
+        pastSpendInr: s.revenue,
+        ordersEach: s.avgOrders,
+        callableNow: s.callable,
+      }));
+      if (!segment) return { reorderCycleDays: r.cycleDays ?? r.defaultDays, segments: summaries };
+      const ids = r.segments.find((s) => s.segment === segment)?.memberIds.slice(0, 50) ?? [];
+      const members = ids.length ? await getDb().select().from(contacts).where(inArray(contacts.id, ids)) : [];
+      return {
+        reorderCycleDays: r.cycleDays ?? r.defaultDays,
+        segment: summaries.find((s) => s.segment === segment),
+        members: members.map((c) => ({
+          name: c.name,
+          phone: c.phone,
+          cohort: COHORT_LABEL[c.cohort],
+          group: c.group,
+          language: c.language,
+          product: [c.product, c.flavour].filter(Boolean).join(" · ") || null,
+          orderCount: c.orderCount,
+          lastOrderAt: c.lastOrderAt,
+          memory: c.lastSummary,
+        })),
+      };
+    },
+  }),
+
+  replenishment_windows: tool({
+    description:
+      "How long one order lasts per product, learned from gaps between repeat orders, with the day Dobara calls after an order and whether the learned window is in force yet. Use for 'when do customers reorder', 'when should we call protein buyers', 'how is call timing decided'.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const r = await getRetention();
+      return {
+        defaultDaysPerOrder: r.defaultDays,
+        brandCycleDays: r.cycleDays,
+        callAtShareOfCycle: 0.8,
+        products: r.windows.map((w) => ({
+          product: w.product,
+          customers: w.customers,
+          repeatGaps: w.gaps,
+          medianDays: w.median,
+          middleHalfDays: w.p25 != null && w.p75 != null ? [w.p25, w.p75] : null,
+          daysPerOrderInForce: w.daysPerOrder,
+          callOnDay: w.callDay,
+          learnedWindowApplied: w.applied,
+        })),
+      };
+    },
+  }),
+
+  weekly_brief: tool({
+    description:
+      "This week against last: first orders, orders, reorders detected, conversations, customers reached, follow-ups opened and cleared, plus the current insights. Use for 'how was this week', 'weekly summary', 'what changed'.",
+    inputSchema: z.object({}),
+    execute: async () => {
+      const r = await getRetention();
+      return {
+        week: r.week.map((w) => ({ ...w, change: w.thisWeek - w.lastWeek })),
+        atRisk: r.segments.find((s) => s.segment === "at_risk")?.customers ?? 0,
+        weakCohorts: r.cohorts.weak.map((w) => w.label),
+        insights: r.insights,
+      };
+    },
+  }),
 };
 
 export const askAgent = new ToolLoopAgent({
   model: ASK_MODEL,
   instructions: `You are Dobara's analyst for ${optionalEnv("BRAND_NAME", "Cosmix")}, a consumer brand that runs retention calls with Dobara.
-Answer questions about the brand's customers, calls, follow-ups, retention health and whether calling is working.
+Answer questions about the brand's customers, calls, follow-ups, retention health, cohorts, segments, reorder timing and whether calling is working.
 
 Rules:
 - Always read the data with a tool before stating a number. Never invent customers, numbers or quotes.
@@ -278,7 +395,7 @@ Rules:
 - If the data cannot answer, say what is missing in one line.
 - You cannot place calls, send messages or change data. If asked to, say where in the console it is done: Customers for calls, Actions for follow-ups, Connect store for syncs.
 - Answer in the language of the question (English, Hindi, Tamil or Kannada).`,
-  tools,
+  tools: askTools,
   stopWhen: stepCountIs(6),
 });
 

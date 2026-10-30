@@ -223,8 +223,8 @@ export function ConnectStore({ connection, defaults }: { connection: Connection;
 
       {!connection && (
         <p className="text-xs text-muted">
-          No store yet? The sample store is built in: 24 customers of an Indian plant-protein brand across every cohort,
-          loaded with one click.
+          No store yet? The sample store is built in: 36 customers of an Indian plant-protein brand across every cohort,
+          with up to seven orders each, loaded with one click.
         </p>
       )}
 

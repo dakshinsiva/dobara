@@ -4,15 +4,18 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Megaphone } from "lucide-react";
 import type { Cohort } from "@/db/schema";
+import type { Segment } from "@/lib/segments";
 import { buttonClass } from "@/components/ui";
 
-/** Dial every eligible customer in a cohort. Guardrails (calling hours) stay on. */
+/** Dial every eligible customer in a cohort or a segment. Guardrails (calling hours) stay on. */
 export function CampaignButton({
   cohort,
+  segment,
   eligible,
   size = "sm",
 }: {
   cohort?: Cohort;
+  segment?: Segment;
   eligible: number;
   size?: "sm" | "md";
 }) {
@@ -33,7 +36,7 @@ export function CampaignButton({
       const res = await fetch("/api/campaigns", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ cohort }),
+        body: JSON.stringify(segment ? { segment } : { cohort }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error ?? res.statusText);
@@ -55,7 +58,7 @@ export function CampaignButton({
         title={eligible === 0 ? "No eligible customers" : undefined}
       >
         <Megaphone className="size-3.5" aria-hidden />
-        {busy ? "Starting…" : `Call cohort (${eligible})`}
+        {busy ? "Starting…" : `Call ${segment ? "segment" : "cohort"} (${eligible})`}
       </button>
       {msg && <span className="text-xs text-muted">{msg}</span>}
     </span>

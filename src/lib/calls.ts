@@ -125,8 +125,11 @@ export interface CampaignResult {
  * Dial every eligible contact in a cohort, one after another. Eligible = called group,
  * not opted out, and no call attempted in the last 24 hours. Calling-hour guardrails stay on.
  */
-export async function startCampaign(opts: { cohort?: Cohort; limit?: number } = {}): Promise<CampaignResult> {
+export async function startCampaign(
+  opts: { cohort?: Cohort; contactIds?: string[]; limit?: number } = {}
+): Promise<CampaignResult> {
   const db = getDb();
+  if (opts.contactIds && opts.contactIds.length === 0) return { eligible: 0, started: [], failed: [] };
   const since = new Date(Date.now() - 24 * 3_600_000);
   const recentCall = db
     .select({ id: calls.id })
@@ -141,6 +144,7 @@ export async function startCampaign(opts: { cohort?: Cohort; limit?: number } = 
         eq(contacts.group, "called"),
         eq(contacts.doNotCall, 0),
         opts.cohort ? eq(contacts.cohort, opts.cohort) : inArray(contacts.cohort, [...CALLABLE_COHORTS]),
+        opts.contactIds ? inArray(contacts.id, opts.contactIds) : undefined,
         notExists(recentCall)
       )
     )

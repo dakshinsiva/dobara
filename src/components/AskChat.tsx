@@ -31,6 +31,9 @@ const SUGGESTIONS = [
   "Is calling working?",
   "What did Nikita say on her last call?",
   "Which product has the weakest repeat rate?",
+  "Which month's customers repeat worst, and why?",
+  "Who is at risk, and who should we call first?",
+  "When do customers reorder, and when do we call?",
   "What follow-ups are waiting?",
 ];
 

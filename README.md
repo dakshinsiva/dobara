@@ -17,7 +17,11 @@ Built for the Bolna Buildathon at Symphony 2026, with Cosmix as the first design
 
 Three cohorts drive the calls: **new** (delivered 4 to 7 days ago), **running low** (about to run out) and **lapsed** (no order in 60 days). Each has its own conversation flow in a single prompt. Customers who bought recently sit in **active** and are never called.
 
-**Connect a Shopify store in two minutes.** Paste a read-only Admin API token on the Connect store page and Dobara reads orders and deliveries, assigns every customer to a cohort, guesses their language from the shipping state, splits them into called and control groups, and detects reorders for the lift metric. A sync runs on demand and every morning at 09:00 IST on Vercel Cron. A built-in sample store (24 customers of a plant-protein brand) lets anyone try the flow without credentials.
+**Retention analytics with the call attached.** The Retention page reads the order history the store sync keeps: cohort curves by month of first order with weak months flagged, the purchase ladder (first→second→third→fourth order) against published D2C benchmarks, the reorder cycle learned from real gaps (per product, it replaces the default days-per-order once there are eight gaps, and sets the day Dobara calls), the discount effect on repeat, and RFM-style segments (champions, loyal, promising, at risk, hibernating, lost) that each carry a playbook and a one-click campaign. Where analytics tools sync a segment to an email flow, Dobara dials it.
+
+**Ask Dobara, anywhere.** A read-only analyst over the workspace answers in text or voice on the Ask page, and the same tools are served over MCP at `/api/mcp` (bearer token) for Claude, ChatGPT, Cursor and Claude Code.
+
+**Connect a Shopify store in two minutes.** Paste a read-only Admin API token on the Connect store page and Dobara reads orders and deliveries, assigns every customer to a cohort, guesses their language from the shipping state, splits them into called and control groups, and detects reorders for the lift metric. A sync runs on demand and every morning at 09:00 IST on Vercel Cron. A built-in sample store (36 customers of a plant-protein brand, with up to seven orders each) lets anyone try the flow without credentials.
 
 There is also a **Talk to Dobara** page: the same agent over the browser microphone (WebRTC), so a judge or a brand lead can hear it without a phone.
 
@@ -96,7 +100,7 @@ vercel link --project dobara
 vercel integration add neon --name dobara-db --meta region=sin1 --meta auth=false --no-claim   # provisions Neon, sets DATABASE_URL
 vercel env pull .env.vercel --environment=production --yes
 node --env-file=.env.vercel scripts/migrate.mjs                                               # creates the tables on Neon
-vercel env add BOLNA_API_KEY production   # and BOLNA_AGENT_ID, WEBHOOK_SECRET, INTEGRATION_SECRET, CRON_SECRET, DEMO_PASSWORD,
+vercel env add BOLNA_API_KEY production   # and BOLNA_AGENT_ID, WEBHOOK_SECRET, INTEGRATION_SECRET, CRON_SECRET, DEMO_PASSWORD, MCP_TOKEN,
                                           # PUBLIC_BASE_URL, BRAND_NAME, OFFER_TEXT, REORDER_URL, DEFAULT_COUNTRY_CODE, INR_PER_USD
 vercel deploy --prod
 PUBLIC_BASE_URL=https://<your-domain> pnpm agent:sync                                           # points the Bolna webhook at production
@@ -132,8 +136,8 @@ scripts/          migrate, reset, agent sync, whoami (plain Node, no build step)
 src/app/          console pages and API routes (App Router)
 src/components/   UI primitives (components/ui) and feature components
 src/db/           Drizzle schema and driver selection (PGlite, Neon, pg)
-src/lib/          Bolna client, call lifecycle, insights, labels, formatting
-src/lib/shopify/  Admin GraphQL client, cohort rules, sync, sample store
+src/lib/          Bolna client, call lifecycle, insights, retention (cohorts, ladder, segments, windows), labels, formatting
+src/lib/shopify/  Admin GraphQL client, cohort rules, sync (contacts and orders), sample store
 ```
 
 ## Security notes
