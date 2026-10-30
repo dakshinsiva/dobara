@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { LANGUAGES } from "@/db/schema";
 import { startWebCall } from "@/lib/calls";
 import { errorResponse, parseJson } from "@/lib/http";
 
@@ -9,6 +10,8 @@ const Body = z
   .object({
     contactId: z.string().uuid().optional(),
     guestName: z.string().max(60).optional(),
+    /** Language the agent opens in for a guest; contacts carry their own */
+    language: z.enum(LANGUAGES).optional(),
     /** Sent by @bolna/web-call when userData is set on the client; ignored, the server decides. */
     user_data: z.unknown().optional(),
   })

@@ -7,7 +7,7 @@ import { Mic, MicOff, PhoneOff, Sparkles } from "lucide-react";
 import type { BolnaWebCall, CallError, CallState } from "@bolna/web-call";
 import { Badge, buttonClass } from "@/components/ui";
 import { COHORT_LABEL, LANGUAGE_LABEL } from "@/lib/labels";
-import type { Cohort, Language } from "@/db/schema";
+import { LANGUAGES, type Cohort, type Language } from "@/db/schema";
 
 export type Persona = {
   id: string;
@@ -34,11 +34,26 @@ const ERROR_TEXT: Record<CallError["code"], string> = {
 /**
  * Browser call to the same agent that phones customers. Audio flows over WebRTC;
  * the server mints a two-minute, single-use session so no API key reaches the browser.
+ *
+ * variant="judge": for strangers on the landing page. The visitor must type their
+ * name and picks the language the call opens in; the results open in the console.
  */
-export function WebCall({ personas, compact = false }: { personas: Persona[]; compact?: boolean }) {
+export function WebCall({
+  personas,
+  compact = false,
+  variant,
+}: {
+  personas: Persona[];
+  compact?: boolean;
+  variant?: "judge";
+}) {
+  const judge = variant === "judge";
+  const isCompact = compact || judge;
   const router = useRouter();
-  const [personaId, setPersonaId] = useState<string>(personas[0]?.id ?? "guest");
-  const [guestName, setGuestName] = useState("Chiranjeevi");
+  const [personaId, setPersonaId] = useState<string>(judge ? "guest" : (personas[0]?.id ?? "guest"));
+  const [guestName, setGuestName] = useState(judge ? "" : "Chiranjeevi");
+  const [language, setLanguage] = useState<Language>("en");
+  const nameOk = guestName.trim().length >= 2;
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [level, setLevel] = useState(0);
@@ -81,6 +96,11 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
   }
 
   async function start() {
+    if (judge && !nameOk) {
+      setPhase("error");
+      setError("Type your name first, so Dobara can greet you.");
+      return;
+    }
     setError(null);
     setElapsed(0);
     setCallId(null);
@@ -94,7 +114,7 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
         const res = await fetch("/api/web-call/session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(personaId === "guest" ? { guestName } : { contactId: personaId }),
+          body: JSON.stringify(personaId === "guest" ? { guestName, language } : { contactId: personaId }),
         });
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Session request failed");
@@ -153,7 +173,11 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
   const ss = (elapsed % 60).toString().padStart(2, "0");
 
   const statusLine: Record<Phase, string> = {
-    idle: "Ready. Dobara will greet you by name and run the same check-in it runs on the phone.",
+    idle: judge
+      ? nameOk
+        ? `Ready. Dobara will greet ${guestName.trim()} by name and run the same check-in it runs on the phone.`
+        : "Type your name, then press the microphone."
+      : "Ready. Dobara will greet you by name and run the same check-in it runs on the phone.",
     connecting: "Connecting to the voice server…",
     ringing: "Ringing Dobara…",
     active: `In call · ${mm}:${ss}`,
@@ -162,8 +186,49 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
   };
 
   return (
-    <div className={compact ? "grid gap-6" : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"}>
+    <div className={isCompact ? "grid gap-6" : "grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]"}>
       <div className="rounded-xl border border-line bg-surface p-6 shadow-card md:p-8">
+        {judge && (
+          <form
+            className="mx-auto mb-6 grid max-w-md gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!inCall) void start();
+            }}
+          >
+            <label className="block text-left text-sm">
+              <span className="text-muted">Your name</span>
+              <input
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                disabled={inCall}
+                required
+                minLength={2}
+                maxLength={60}
+                autoComplete="given-name"
+                placeholder="So Dobara can greet you"
+                aria-label="Your name"
+                className="mt-1 h-10 w-full rounded-lg border border-line bg-canvas px-3 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-accent"
+              />
+            </label>
+            <label className="block text-left text-sm">
+              <span className="text-muted">Opens in</span>
+              <select
+                value={language}
+                onChange={(e) => setLanguage(e.target.value as Language)}
+                disabled={inCall}
+                aria-label="Language the call opens in"
+                className="mt-1 h-10 rounded-lg border border-line bg-canvas px-3 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-accent"
+              >
+                {LANGUAGES.map((l) => (
+                  <option key={l} value={l}>
+                    {LANGUAGE_LABEL[l]}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </form>
+        )}
         <div className="flex flex-col items-center text-center">
           <div className="relative mb-6 grid size-40 place-items-center">
             {phase === "active" && (
@@ -178,7 +243,7 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
             )}
             <button
               onClick={inCall ? hangUp : start}
-              disabled={phase === "connecting" || phase === "ringing"}
+              disabled={phase === "connecting" || phase === "ringing" || (judge && !inCall && !nameOk)}
               aria-label={inCall ? "End call" : "Start call"}
               className={[
                 "relative grid size-28 place-items-center rounded-full text-accent-fg shadow-lg transition-colors focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent disabled:opacity-70",
@@ -222,7 +287,7 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
               {followUp === "ready" && callId && (
                 <Link href={`/calls/${callId}`} className={buttonClass("primary", "md")}>
                   <Sparkles className="size-4" aria-hidden />
-                  See transcript, extractions and memory
+                  {judge ? "See what Dobara heard" : "See transcript, extractions and memory"}
                 </Link>
               )}
               {followUp === "pending" && callId && (
@@ -240,7 +305,7 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
               Try again
             </button>
           )}
-          {compact && !inCall && (
+          {compact && !judge && !inCall && (
             <p className="mt-5 text-xs text-faint">
               Calling as <span className="text-muted">{persona?.name ?? guestName}</span>
               {persona?.hasMemory ? ", who it spoke to before" : ""}.{" "}
@@ -249,10 +314,16 @@ export function WebCall({ personas, compact = false }: { personas: Persona[]; co
               </Link>
             </p>
           )}
+          {judge && !inCall && phase === "idle" && (
+            <p className="mt-5 max-w-md text-xs text-faint">
+              It is an AI and says so. Allow the microphone when the browser asks. Two minutes, in the language you pick
+              or whichever you switch to.
+            </p>
+          )}
         </div>
       </div>
 
-      {!compact && (
+      {!isCompact && (
         <aside className="space-y-4">
           <div className="rounded-xl border border-line bg-surface p-4 shadow-card">
             <div className="text-xs font-medium uppercase tracking-wider text-faint">Who is Dobara calling?</div>

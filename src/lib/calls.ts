@@ -11,6 +11,7 @@ import {
   type Cohort,
   type Contact,
   type ExtractedData,
+  type Language,
   type NewAction,
 } from "@/db/schema";
 import { bolna, BolnaError, TERMINAL_STATUSES, type ExecutionPayload, type WebCallSession } from "./bolna";
@@ -37,7 +38,7 @@ export function buildUserData(contact: Contact) {
 }
 
 /** A stand-in customer for browser demos when no contact is chosen. */
-export function guestUserData(name: string) {
+export function guestUserData(name: string, language: Language = "en") {
   return {
     customer_name: name.trim() || "there",
     brand: optionalEnv("BRAND_NAME", "Cosmix"),
@@ -46,7 +47,7 @@ export function guestUserData(name: string) {
     days_since_order: 28,
     cohort: "running_low",
     last_summary: "This is the first call.",
-    language: "en",
+    language,
     offer: optionalEnv("OFFER_TEXT", "10% off the next order with code DOBARA10, valid for 7 days"),
     timezone: "Asia/Kolkata",
   };
@@ -96,16 +97,18 @@ export async function startCallForContact(contactId: string, opts: { bypassGuard
 export async function startWebCall(input: {
   contactId?: string;
   guestName?: string;
+  language?: Language;
 }): Promise<{ session: WebCallSession; call: Call }> {
   const db = getDb();
   let contact: Contact | null = null;
   if (input.contactId) contact = await loadCallableContact(input.contactId);
 
-  const userData = contact ? buildUserData(contact) : guestUserData(input.guestName ?? "");
+  const language = contact?.language ?? input.language ?? "en";
+  const userData = contact ? buildUserData(contact) : guestUserData(input.guestName ?? "", language);
   const session = await bolna.createWebCallSession({
     agent_id: requireEnv("BOLNA_AGENT_ID"),
     user_data: userData,
-    agent_data: { language: contact?.language ?? "en" },
+    agent_data: { language },
   });
 
   const [call] = await db

@@ -1,11 +1,9 @@
 import Image from "next/image";
 import Link from "next/link";
 import { cookies } from "next/headers";
-import { and, eq } from "drizzle-orm";
 import { ArrowRight, ChevronDown, CodeXml, LayoutDashboard, Mic, Moon, PhoneCall, Sun } from "lucide-react";
-import { WebCall, type Persona } from "@/components/WebCall";
+import { WebCall } from "@/components/WebCall";
 import { buttonClass, cx } from "@/components/ui";
-import { getDb, schema } from "@/db";
 
 export const dynamic = "force-dynamic";
 
@@ -56,34 +54,6 @@ const FAQ: Array<[string, string]> = [
   ],
 ];
 
-/** Sample-store customers first, so a stranger talks to "Meera Iyer" rather than a real person's row. */
-async function loadPersonas(): Promise<Persona[]> {
-  try {
-    const db = getDb();
-    const base = and(eq(schema.contacts.group, "called"), eq(schema.contacts.doNotCall, 0));
-    let rows = await db
-      .select()
-      .from(schema.contacts)
-      .where(and(base, eq(schema.contacts.source, "shopify")))
-      .orderBy(schema.contacts.createdAt)
-      .limit(4);
-    if (rows.length === 0) {
-      rows = await db.select().from(schema.contacts).where(base).orderBy(schema.contacts.createdAt).limit(4);
-    }
-    return rows.map((c) => ({
-      id: c.id,
-      name: c.name,
-      product: c.product,
-      flavour: c.flavour,
-      cohort: c.cohort,
-      language: c.language,
-      hasMemory: Boolean(c.lastSummary),
-    }));
-  } catch {
-    return [];
-  }
-}
-
 function Wrap({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cx("mx-auto w-full max-w-5xl px-4 md:px-8", className)}>{children}</div>;
 }
@@ -97,7 +67,6 @@ export default async function LandingPage() {
   const theme = cookieStore.get("theme")?.value;
   const nextTheme = theme === "dark" ? "light" : "dark";
   const agentReady = Boolean(process.env.BOLNA_AGENT_ID && process.env.BOLNA_API_KEY);
-  const personas = await loadPersonas();
 
   return (
     <div className="min-h-screen">
@@ -272,13 +241,14 @@ export default async function LandingPage() {
                 Talk to the agent that phones customers.
               </h2>
               <p className="mt-4 text-base leading-7 text-muted">
-                Same agent, over your microphone. Switch to Hindi halfway through. Say you have three scoops left. Ask
-                if it is a bot.
+                Type your name and press the microphone. Dobara greets you by name and runs the two-minute check-in it
+                runs on the phone. Switch to Hindi halfway through. Say you have three scoops left. Ask if it is a bot.
+                When you hang up, one click opens the call in the console: the answers, the memory and the transcript.
               </p>
             </div>
-            <div className="rounded-2xl border border-line bg-surface p-5 shadow-card">
+            <div>
               {agentReady ? (
-                <WebCall personas={personas} compact />
+                <WebCall personas={[]} variant="judge" />
               ) : (
                 <p className="text-sm text-muted">The voice agent is not configured on this deployment yet.</p>
               )}
