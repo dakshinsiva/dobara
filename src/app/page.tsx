@@ -172,8 +172,8 @@ export default async function LandingPage() {
       <section className="py-20 md:py-28">
         <Wrap>
           <p className="max-w-3xl text-2xl font-medium leading-snug tracking-tight md:text-4xl">
-            Brands keep <span className="text-accent-2">20 to 30%</span> of first-time buyers. Text gets ignored. Human
-            calls cost too much. So nobody calls.
+            Brands keep <span className="text-accent-2">20 to 30%</span> of first-time buyers. Text gets ignored. No
+            team can call thousands of customers a month. So nobody calls.
           </p>
           <p className="mt-6 text-lg leading-8 text-muted">Dobara makes the call.</p>
         </Wrap>
