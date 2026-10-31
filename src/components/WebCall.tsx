@@ -190,14 +190,14 @@ export function WebCall({
       <div className="rounded-xl border border-line bg-surface p-6 shadow-card md:p-8">
         {judge && (
           <form
-            className="mx-auto mb-6 grid max-w-md gap-3 sm:grid-cols-[minmax(0,1fr)_auto]"
+            className="mx-auto mb-6 grid max-w-md gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]"
             onSubmit={(e) => {
               e.preventDefault();
               if (!inCall) void start();
             }}
           >
             <label className="block text-left text-sm">
-              <span className="text-muted">Your name</span>
+              <span className="block text-muted">Your name</span>
               <input
                 value={guestName}
                 onChange={(e) => setGuestName(e.target.value)}
@@ -212,13 +212,13 @@ export function WebCall({
               />
             </label>
             <label className="block text-left text-sm">
-              <span className="text-muted">Opens in</span>
+              <span className="block text-muted">Opens in</span>
               <select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as Language)}
                 disabled={inCall}
                 aria-label="Language the call opens in"
-                className="mt-1 h-10 rounded-lg border border-line bg-canvas px-3 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-accent"
+                className="mt-1 h-10 w-full rounded-lg border border-line bg-canvas px-3 text-sm focus:outline-2 focus:outline-offset-1 focus:outline-accent"
               >
                 {LANGUAGES.map((l) => (
                   <option key={l} value={l}>
